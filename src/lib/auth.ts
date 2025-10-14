@@ -1,0 +1,107 @@
+import { supabase } from "./supabase";
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: "admin" | "manager" | "trainer" | "employee";
+  phone?: string;
+}
+
+// Sign up a new user
+export async function signUp(
+  email: string,
+  password: string,
+  userData: {
+    first_name: string;
+    last_name: string;
+    role?: "admin" | "manager" | "trainer" | "employee";
+    phone?: string;
+  }
+) {
+  try {
+    // 1. Create auth user
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (authError) throw authError;
+
+    // 2. Create user profile (if auth user was created successfully)
+    if (authData.user) {
+      const { error: profileError } = await supabase.from("users").insert({
+        id: authData.user.id,
+        email: authData.user.email!,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        role: userData.role || "employee",
+        phone: userData.phone,
+        // is_active: true, default value set in the database
+      });
+
+      if (profileError) throw profileError;
+    }
+
+    return { user: authData.user, error: null };
+  } catch (error: any) {
+    return { user: null, error };
+  }
+}
+
+// Sign in existing user
+export async function signIn(email: string, password: string) {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+
+    return { user: data.user, error: null };
+  } catch (error: any) {
+    return { user: null, error };
+  }
+}
+
+// Sign out
+export async function signOut() {
+  const { error } = await supabase.auth.signOut();
+  return { error };
+}
+
+// Get current user profile (auth + profile data)
+export async function getCurrentUser(): Promise<AuthUser | null> {
+  try {
+    // Get auth user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) return null;
+
+    // Get profile data
+    const { data: profile, error: profileError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile) return null;
+
+    return profile as AuthUser;
+  } catch (error) {
+    return null;
+  }
+}
+
+// Check if user is authenticated
+export async function isAuthenticated(): Promise<boolean> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return !!user;
+}
