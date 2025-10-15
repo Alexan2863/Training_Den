@@ -67,10 +67,7 @@ export default function DashboardPage() {
               >
                 {user.role.toUpperCase()}
               </span>
-              <button
-                onClick={handleSignOut}
-                className="bg-white hover:bg-violet-100 text-violet-900 border-violet-900 border px-4 py-2 rounded text-sm"
-              >
+              <button onClick={handleSignOut} className="btn-secondary">
                 Sign Out
               </button>
             </div>
