@@ -9,7 +9,7 @@ export interface AuthUser {
   phone?: string;
 }
 
-// Sign up a new user
+// Sign up
 export async function signUp(
   email: string,
   password: string,
@@ -21,7 +21,6 @@ export async function signUp(
   }
 ) {
   try {
-    // 1. Create auth user
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -29,7 +28,6 @@ export async function signUp(
 
     if (authError) throw authError;
 
-    // 2. Create user profile (if auth user was created successfully)
     if (authData.user) {
       const { error: profileError } = await supabase.from("users").insert({
         id: authData.user.id,
@@ -50,7 +48,7 @@ export async function signUp(
   }
 }
 
-// Sign in existing user
+// Sign in
 export async function signIn(email: string, password: string) {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -72,10 +70,8 @@ export async function signOut() {
   return { error };
 }
 
-// Get current user profile (auth + profile data)
 export async function getCurrentUser(): Promise<AuthUser | null> {
   try {
-    // Get auth user
     const {
       data: { user },
       error: authError,
@@ -83,7 +79,6 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
     if (authError || !user) return null;
 
-    // Get profile data
     const { data: profile, error: profileError } = await supabase
       .from("users")
       .select("*")
@@ -98,7 +93,6 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   }
 }
 
-// Check if user is authenticated
 export async function isAuthenticated(): Promise<boolean> {
   const {
     data: { user },

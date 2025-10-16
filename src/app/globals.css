@@ -24,8 +24,8 @@
   --ring: #7c3aed;
 
   /* Card and surface */
-  --card: #ffffff;
-  --card-foreground: #171717;
+  --card: #fafbff;
+  --card-foreground: #0e0e0e;
 }
 
 @theme inline {
@@ -105,7 +105,7 @@ body {
 }
 
 .btn-primary:hover {
-  background: var(--primary-dark);
+  background: var(--primary-light);
 }
 
 .btn-secondary {
