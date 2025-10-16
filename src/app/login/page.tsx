@@ -34,7 +34,7 @@ export default function LoginPage() {
             <img
               src="/small-circle.svg"
               alt="Training Den Logo"
-              className="h-auto w-100"
+              className="h-auto w-full"
             />
             <h2 className="text-center text-3xl font-extrabold text-gray-900">
               Training Den

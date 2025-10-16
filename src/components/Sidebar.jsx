@@ -48,7 +48,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 href={item.href}
                 className="text-white text-lg hover:text-secondary-light transition-colors"
                 onClick={() => {
-                  if (window.innerWidth < 1024) {
+                  if (typeof window !== 'undefined' && window.innerWidth < 1024) {
                     onClose();
                   }
                 }}
