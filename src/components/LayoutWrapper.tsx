@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useCallback, useMemo, ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { getCurrentUser } from "../lib/auth";
+import { useUser } from "./UserProvider";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 
-function getPageTitle(pathname) {
-  const pathMap = {
+function getPageTitle(pathname: string): string {
+  const pathMap: Record<string, string> = {
     "/dashboard": "Dashboard",
     "/training-programs": "Training Programs",
     "/users": "Users",
@@ -15,18 +15,26 @@ function getPageTitle(pathname) {
   return pathMap[pathname] || "Training Den";
 }
 
-export default function LayoutWrapper({ children }) {
+interface LayoutWrapperProps {
+  children: ReactNode;
+}
+
+export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const user = useUser();
   const pathname = usePathname();
 
-  useEffect(() => {
-    async function loadUser() {
-      const currentUser = await getCurrentUser();
-      setUser(currentUser);
-    }
-    loadUser();
-  }, [pathname]);
+  // Memoize callbacks to prevent unnecessary rerenders
+  const handleSidebarClose = useCallback(() => {
+    setIsSidebarOpen(false);
+  }, []);
+
+  const handleMenuClick = useCallback(() => {
+    setIsSidebarOpen((prev) => !prev);
+  }, []);
+
+  // Memoize pageTitle to prevent recalculation
+  const pageTitle = useMemo(() => getPageTitle(pathname), [pathname]);
 
   const isAuthPage = pathname === "/login" || pathname === "/register";
 
@@ -34,19 +42,17 @@ export default function LayoutWrapper({ children }) {
     return <>{children}</>;
   }
 
-  const pageTitle = getPageTitle(pathname);
-
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <Sidebar isOpen={isSidebarOpen} onClose={handleSidebarClose} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <Header
           pageTitle={pageTitle}
-          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          onMenuClick={handleMenuClick}
           user={user}
         />
 

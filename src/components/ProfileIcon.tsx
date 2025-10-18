@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import { useRouter } from "next/navigation";
-import { signOut } from "../lib/auth";
+import { AuthUser, signOut } from "../lib/auth";
 
 // Get role-based colors
-function getAvatarColors(role) {
-  const colorMap = {
+function getAvatarColors(role: AuthUser["role"]) {
+  const colorMap: Record<
+    AuthUser["role"],
+    { bg: string; text: string }
+  > = {
     admin: { bg: "bg-emerald-50", text: "text-emerald-800" },
     manager: { bg: "bg-rose-50", text: "text-rose-800" },
     trainer: { bg: "bg-fuchsia-50", text: "text-fuchsia-800" },
@@ -16,23 +19,29 @@ function getAvatarColors(role) {
 }
 
 // Get user initials
-function getInitials(firstName, lastName) {
+function getInitials(firstName: string, lastName: string): string {
   const firstInitial = firstName?.charAt(0)?.toUpperCase() || "";
   const lastInitial = lastName?.charAt(0)?.toUpperCase() || "";
   return `${firstInitial}${lastInitial}`;
 }
 
 // Sizes
-const sizeClasses = {
+const sizeClasses: Record<string, string> = {
   sm: "w-8 h-8 text-sm",
   md: "w-10 h-10 text-lg",
   lg: "w-12 h-12 text-xl",
   xl: "w-16 h-16 text-2xl",
 };
 
-export default function ProfileIcon({ user, size = "md", className = "" }) {
+interface ProfileIconProps {
+  user: AuthUser | null;
+  size?: "sm" | "md" | "lg" | "xl";
+  className?: string;
+}
+
+function ProfileIcon({ user, size = "md", className = "" }: ProfileIconProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   const initials = user ? getInitials(user.first_name, user.last_name) : "U";
@@ -42,8 +51,11 @@ export default function ProfileIcon({ user, size = "md", className = "" }) {
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsDropdownOpen(false);
       }
     }
@@ -94,3 +106,5 @@ export default function ProfileIcon({ user, size = "md", className = "" }) {
     </div>
   );
 }
+
+export default memo(ProfileIcon);

@@ -1,9 +1,15 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-export default function Sidebar({ isOpen, onClose }) {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navItems = [
     { name: "Home", href: "/dashboard" },
     { name: "Training Programs", href: "/training-programs" },
@@ -48,7 +54,10 @@ export default function Sidebar({ isOpen, onClose }) {
                 href={item.href}
                 className="text-white text-lg hover:text-secondary-light transition-colors"
                 onClick={() => {
-                  if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                  if (
+                    typeof window !== "undefined" &&
+                    window.innerWidth < 1024
+                  ) {
                     onClose();
                   }
                 }}
@@ -62,3 +71,5 @@ export default function Sidebar({ isOpen, onClose }) {
     </>
   );
 }
+
+export default memo(Sidebar);

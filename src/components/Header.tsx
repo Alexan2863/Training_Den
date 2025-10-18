@@ -1,8 +1,16 @@
 "use client";
 
+import { memo } from "react";
+import { AuthUser } from "../lib/auth";
 import ProfileIcon from "./ProfileIcon";
 
-export default function Header({ pageTitle, onMenuClick, user }) {
+interface HeaderProps {
+  pageTitle: string;
+  onMenuClick: () => void;
+  user: AuthUser | null;
+}
+
+function Header({ pageTitle, onMenuClick, user }: HeaderProps) {
   return (
     <header className="bg-primary text-white shadow-md">
       <div className="flex items-center justify-between px-4 py-4 lg:px-6">
@@ -26,3 +34,5 @@ export default function Header({ pageTitle, onMenuClick, user }) {
     </header>
   );
 }
+
+export default memo(Header);
