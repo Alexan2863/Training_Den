@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { signIn } from "../../../lib/auth";
 
 export default function LoginPage() {
@@ -31,9 +32,11 @@ export default function LoginPage() {
       <div className="card px-10">
         <div className="max-w-md w-full space-y-2 p-8">
           <div>
-            <img
+            <Image
               src="/small-circle.svg"
               alt="Training Den Logo"
+              width={400}
+              height={400}
               className="h-auto w-full"
             />
             <h2 className="text-center text-3xl font-extrabold text-gray-900">
@@ -103,7 +106,7 @@ export default function LoginPage() {
 
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <a
                   href="/register"
                   className="font-medium text-primary hover:text-primary-light"
