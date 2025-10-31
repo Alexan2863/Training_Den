@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { getProgramCount, getSessionCount } from "@/lib/services/stats";
 
 export async function GET() {
   try {
@@ -36,25 +37,11 @@ export async function GET() {
       throw new Error(`Trainers count failed: ${trainersError.message}`);
     }
 
-    // Count active sessions (is_active=true)
-    const { count: activeSessionsCount, error: sessionsError } = await supabase
-      .from("training_session")
-      .select("*", { count: "exact", head: true })
-      .eq("is_active", true);
+    // Count active sessions
+    const activeSessionsCount = await getSessionCount();
 
-    if (sessionsError) {
-      throw new Error(`Active sessions count failed: ${sessionsError.message}`);
-    }
-
-    // Count active programs (is_active=true)
-    const { count: activeProgramsCount, error: programsError } = await supabase
-      .from("training_program")
-      .select("*", { count: "exact", head: true })
-      .eq("is_active", true);
-
-    if (programsError) {
-      throw new Error(`Active programs count failed: ${programsError.message}`);
-    }
+    // Count active programs
+    const activeProgramsCount = await getProgramCount();
 
     // Return all counts
     return NextResponse.json({
@@ -63,8 +50,8 @@ export async function GET() {
         employees: employeesCount ?? 0,
         managers: managersCount ?? 0,
         trainers: trainersCount ?? 0,
-        activeSessions: activeSessionsCount ?? 0,
-        activePrograms: activeProgramsCount ?? 0,
+        activeSessions: activeSessionsCount,
+        activePrograms: activeProgramsCount,
       },
     });
   } catch (error: any) {
