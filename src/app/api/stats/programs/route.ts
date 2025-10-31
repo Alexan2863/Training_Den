@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProgramCount } from "@/lib/services/stats";
 import { requireRole, isAuthError } from "@/lib/auth/api";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 export async function GET(request: NextRequest) {
   // Require admin or manager role
@@ -52,13 +53,14 @@ export async function GET(request: NextRequest) {
         activePrograms: count,
       },
     });
-  } catch (error: any) {
-    console.error("Program count failed:", error);
+  } catch (error: unknown) {
+    const errorMessage = getErrorMessage(error);
+    console.error("Program count failed:", errorMessage);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
+        error: errorMessage,
         message: "Failed to fetch program count.",
       },
       { status: 500 }

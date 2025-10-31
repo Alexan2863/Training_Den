@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCompletionRates } from "@/lib/services/stats";
 import { requireAuth, isAuthError } from "@/lib/auth/api";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 export async function GET() {
   // Require authentication (any role)
@@ -17,13 +18,14 @@ export async function GET() {
       success: true,
       data: stats,
     });
-  } catch (error: any) {
-    console.error("Completion rates failed:", error);
+  } catch (error: unknown) {
+    const errorMessage = getErrorMessage(error);
+    console.error("Completion rates failed:", errorMessage);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
+        error: errorMessage,
         message: "Failed to fetch completion rates.",
       },
       { status: 500 }

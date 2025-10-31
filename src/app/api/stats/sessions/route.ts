@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionCount } from "@/lib/services/stats";
 import { requireRole, isAuthError } from "@/lib/auth/api";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 export async function GET(request: NextRequest) {
   // Require admin or trainer role
@@ -52,13 +53,14 @@ export async function GET(request: NextRequest) {
         activeSessions: count,
       },
     });
-  } catch (error: any) {
-    console.error("Session count failed:", error);
+  } catch (error: unknown) {
+    const errorMessage = getErrorMessage(error);
+    console.error("Session count failed:", errorMessage);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
+        error: errorMessage,
         message: "Failed to fetch session count.",
       },
       { status: 500 }

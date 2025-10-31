@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-import { getProgramCount, getSessionCount } from "@/lib/services/stats";
+import {
+  getUserCountByRole,
+  getProgramCount,
+  getSessionCount,
+} from "@/lib/services/stats";
 import { requireRole, isAuthError } from "@/lib/auth/api";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 export async function GET() {
   // Require admin role
@@ -11,49 +15,11 @@ export async function GET() {
   }
 
   try {
-    // Count admin (role='admin', is_active=true)
-    const { count: adminsCount, error: adminsError } = await supabase
-      .from("users")
-      .select("*", { count: "exact", head: true })
-      .eq("role", "admin")
-      .eq("is_active", true);
-
-    if (adminsError) {
-      throw new Error(`Admins count failed: ${adminsError.message}`);
-    }
-
-    // Count employees (role='employee', is_active=true)
-    const { count: employeesCount, error: employeesError } = await supabase
-      .from("users")
-      .select("*", { count: "exact", head: true })
-      .eq("role", "employee")
-      .eq("is_active", true);
-
-    if (employeesError) {
-      throw new Error(`Employees count failed: ${employeesError.message}`);
-    }
-
-    // Count managers (role='manager', is_active=true)
-    const { count: managersCount, error: managersError } = await supabase
-      .from("users")
-      .select("*", { count: "exact", head: true })
-      .eq("role", "manager")
-      .eq("is_active", true);
-
-    if (managersError) {
-      throw new Error(`Managers count failed: ${managersError.message}`);
-    }
-
-    // Count trainers (role='trainer', is_active=true)
-    const { count: trainersCount, error: trainersError } = await supabase
-      .from("users")
-      .select("*", { count: "exact", head: true })
-      .eq("role", "trainer")
-      .eq("is_active", true);
-
-    if (trainersError) {
-      throw new Error(`Trainers count failed: ${trainersError.message}`);
-    }
+    // Count users by role using shared service function
+    const adminsCount = await getUserCountByRole("admin");
+    const employeesCount = await getUserCountByRole("employee");
+    const managersCount = await getUserCountByRole("manager");
+    const trainersCount = await getUserCountByRole("trainer");
 
     // Count active sessions
     const activeSessionsCount = await getSessionCount();
@@ -65,21 +31,22 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: {
-        admins: adminsCount ?? 0,
-        employees: employeesCount ?? 0,
-        managers: managersCount ?? 0,
-        trainers: trainersCount ?? 0,
+        admins: adminsCount,
+        employees: employeesCount,
+        managers: managersCount,
+        trainers: trainersCount,
         activeSessions: activeSessionsCount,
         activePrograms: activeProgramsCount,
       },
     });
-  } catch (error: any) {
-    console.error("Dashboard stats failed:", error);
+  } catch (error: unknown) {
+    const errorMessage = getErrorMessage(error);
+    console.error("Dashboard stats failed:", errorMessage);
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
+        error: errorMessage,
         message: "Failed to fetch dashboard statistics.",
       },
       { status: 500 }

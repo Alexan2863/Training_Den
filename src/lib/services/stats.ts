@@ -1,4 +1,27 @@
-import { supabase } from "../supabase";
+import { createClient } from "../supabase/server";
+
+/**
+ * Get count of active users by role
+ * @param role - The user role to count
+ * @returns Count of active users with the specified role
+ */
+export async function getUserCountByRole(
+  role: "admin" | "manager" | "trainer" | "employee"
+) {
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from("users")
+    .select("*", { count: "exact", head: true })
+    .eq("role", role)
+    .eq("is_active", true);
+
+  if (error) {
+    throw new Error(`Failed to count ${role}s: ${error.message}`);
+  }
+
+  return count ?? 0;
+}
 
 /**
  * Get count of active training programs
@@ -6,6 +29,7 @@ import { supabase } from "../supabase";
  * @returns Count of active programs
  */
 export async function getProgramCount(filters?: { managerId?: string }) {
+  const supabase = await createClient();
   let query = supabase
     .from("training_program")
     .select("*", { count: "exact", head: true })
@@ -31,6 +55,7 @@ export async function getProgramCount(filters?: { managerId?: string }) {
  * @returns Count of active sessions
  */
 export async function getSessionCount(filters?: { trainerId?: string }) {
+  const supabase = await createClient();
   let query = supabase
     .from("training_session")
     .select("*", { count: "exact", head: true })
@@ -52,32 +77,24 @@ export async function getSessionCount(filters?: { trainerId?: string }) {
 
 /**
  * Get completion rate statistics for training sessions
+ * Single query optimization - fetches all enrollment completion statuses in one round-trip
  * @returns Completion rate data
  */
 export async function getCompletionRates() {
-  // Get total enrollments
-  const { count: totalEnrollments, error: totalError } = await supabase
-    .from("session_enrollment")
-    .select("*", { count: "exact", head: true });
+  const supabase = await createClient();
 
-  if (totalError) {
-    throw new Error(`Failed to get total enrollments: ${totalError.message}`);
+  // Fetch all enrollment completion statuses in a single query
+  const { data, error } = await supabase
+    .from("session_enrollment")
+    .select("completed");
+
+  if (error) {
+    throw new Error(`Failed to get enrollment data: ${error.message}`);
   }
 
-  // Get completed enrollments
-  const { count: completedEnrollments, error: completedError } = await supabase
-    .from("session_enrollment")
-    .select("*", { count: "exact", head: true })
-    .eq("completed", true);
-
-  if (completedError) {
-    throw new Error(
-      `Failed to get completed enrollments: ${completedError.message}`
-    );
-  }
-
-  const total = totalEnrollments ?? 0;
-  const completed = completedEnrollments ?? 0;
+  // Aggregate counts from the fetched data
+  const total = data?.length ?? 0;
+  const completed = data?.filter((enrollment) => enrollment.completed).length ?? 0;
   const rate = total > 0 ? (completed / total) * 100 : 0;
 
   return {
