@@ -1,9 +1,27 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { getProgramCount, getSessionCount } from "@/lib/services/stats";
+import { requireRole, isAuthError } from "@/lib/auth/api";
 
 export async function GET() {
+  // Require admin role
+  const authResult = await requireRole(["admin"]);
+  if (isAuthError(authResult)) {
+    return authResult;
+  }
+
   try {
+    // Count admin (role='admin', is_active=true)
+    const { count: adminsCount, error: adminsError } = await supabase
+      .from("users")
+      .select("*", { count: "exact", head: true })
+      .eq("role", "admin")
+      .eq("is_active", true);
+
+    if (adminsError) {
+      throw new Error(`Admins count failed: ${adminsError.message}`);
+    }
+
     // Count employees (role='employee', is_active=true)
     const { count: employeesCount, error: employeesError } = await supabase
       .from("users")
@@ -47,6 +65,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: {
+        admins: adminsCount ?? 0,
         employees: employeesCount ?? 0,
         managers: managersCount ?? 0,
         trainers: trainersCount ?? 0,

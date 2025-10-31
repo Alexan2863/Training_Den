@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { getCompletionRates } from "@/lib/services/stats";
+import { requireAuth, isAuthError } from "@/lib/auth/api";
 
 export async function GET() {
+  // Require authentication (any role)
+  const authResult = await requireAuth();
+  if (isAuthError(authResult)) {
+    return authResult;
+  }
+
   try {
     // Get completion rate statistics
     const stats = await getCompletionRates();
