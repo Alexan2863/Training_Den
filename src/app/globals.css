@@ -77,7 +77,8 @@
   --radius-full: 9999px; */
 
   /* Shadows */
-  --shadow-md: 0 1px 4px 0 rgb(0 0 0 / 0.16);
+  --shadow-md: 0 1px 4px 0 rgb(33 34 48 / 0.16);
+  --shadow-lg: 5px 5px 10px -1px rgb(33 34 48 / 0.16);
 }
 
 body {

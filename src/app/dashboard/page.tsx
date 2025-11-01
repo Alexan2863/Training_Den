@@ -3,6 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getCurrentUser, AuthUser } from "../../lib/auth";
+import {
+  AdminDashboard,
+  ManagerDashboard,
+  TrainerDashboard,
+  EmployeeDashboard,
+} from "@/components/dashboard";
 
 export default function DashboardPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -35,15 +41,36 @@ export default function DashboardPage() {
     return null; // redirect to login
   }
 
+  const renderDashboard = () => {
+    switch (user.role) {
+      case "admin":
+        return <AdminDashboard />;
+      case "manager":
+        return <ManagerDashboard />;
+      case "trainer":
+        return <TrainerDashboard />;
+      case "employee":
+        return <EmployeeDashboard />;
+      default:
+        return (
+          <div className="text-center text-gray-500">
+            <p>Dashboard not available for this role</p>
+          </div>
+        );
+    }
+  };
+
   return (
     <div className="w-full h-full max-w-7xl">
       <main className="w-full h-full p-6">
-        <div className="border-4 border-dashed border-gray-200 rounded-md p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            {user.role.charAt(0).toUpperCase() + user.role.slice(1)} Dashboard
-          </h2>
+        <div className="space-y-8">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Welcome back, {user.first_name} {user.last_name}
+            </h2>
+          </div>
 
-          <div className="bg-white overflow-hidden shadow rounded-md">
+          <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
                 Your Information
@@ -77,13 +104,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="mt-6 text-center text-gray-500">
-            <p>Role-specific features coming soon!</p>
-            <p className="text-sm mt-2">
-              This dashboard will show different content based on your role:{" "}
-              {user.role}
-            </p>
-          </div>
+          <div>{renderDashboard()}</div>
         </div>
       </main>
     </div>
