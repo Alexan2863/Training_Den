@@ -13,6 +13,7 @@ import {
 export default function DashboardPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -24,21 +25,17 @@ export default function DashboardPage() {
       }
       setUser(currentUser);
       setIsLoading(false);
+      // Trigger fade-in after user is loaded
+      setTimeout(() => {
+        setLoaded(true);
+      }, 100);
     }
 
     loadUser();
   }, [router]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null; // redirect to login
+  if (isLoading || !user) {
+    return null; // Will show nothing while loading or redirecting
   }
 
   const renderDashboard = () => {
@@ -63,7 +60,7 @@ export default function DashboardPage() {
   return (
     <div className="w-full h-full max-w-7xl">
       <main className="w-full h-full p-6">
-        <div className="space-y-8">
+        <div className={`${loaded ? "loaded loading" : "loading"} space-y-8`}>
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               Welcome back, {user.first_name} {user.last_name}

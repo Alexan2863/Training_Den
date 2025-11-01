@@ -12,6 +12,7 @@ interface ManagerDashboardData {
 export default function ManagerDashboard() {
   const [data, setData] = useState<ManagerDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -38,6 +39,10 @@ export default function ManagerDashboard() {
         setData({
           activePrograms: programResult.data.activePrograms,
         });
+        // Trigger fade-in after data is loaded
+        setTimeout(() => {
+          setLoaded(true);
+        }, 100);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
@@ -73,7 +78,9 @@ export default function ManagerDashboard() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div
+      className={`${loaded ? "loaded loading" : "loading"} grid grid-cols-1 md:grid-cols-2 gap-6`}
+    >
       <DashboardStatsWidget
         title="Your Programs"
         value={data.activePrograms}

@@ -16,6 +16,7 @@ interface AdminDashboardData {
 export default function AdminDashboard() {
   const [data, setData] = useState<AdminDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,6 +30,10 @@ export default function AdminDashboard() {
         }
 
         setData(result.data);
+        // Trigger fade-in after data is loaded
+        setTimeout(() => {
+          setLoaded(true);
+        }, 100);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
@@ -64,7 +69,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className={`${loaded ? "loaded loading" : "loading"} space-y-6`}>
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Overview</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
