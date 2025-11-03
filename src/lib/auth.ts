@@ -30,7 +30,7 @@ export async function signUp(
     if (authError) throw authError;
 
     if (authData.user) {
-      const { error: profileError } = await supabase.from("users").insert([{
+      const { error: profileError } = await supabase.from("users").insert({
         id: authData.user.id,
         email: authData.user.email!,
         first_name: userData.first_name,
@@ -38,7 +38,7 @@ export async function signUp(
         role: userData.role || "employee",
         phone: userData.phone,
         // is_active: true, default value set in the database
-      }] as any);
+      });
 
       if (profileError) throw profileError;
     }

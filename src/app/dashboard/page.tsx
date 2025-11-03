@@ -60,7 +60,7 @@ export default function DashboardPage() {
   return (
     <div className="w-full h-full max-w-7xl">
       <main className="w-full h-full p-6">
-        <div className={`${loaded ? "loaded loading" : "loading"} space-y-8`}>
+        <div className={`loading ${loaded ? "loaded" : ""} space-y-8`}>
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               Welcome back, {user.first_name} {user.last_name}
