@@ -59,7 +59,7 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="flex items-center gap-3 text-white text-lg hover:text-secondary-light transition-colors"
+                  className="flex items-center gap-3 text-white text-lg hover:text-secondary-light transition-colors hover:underline"
                   onClick={() => {
                     if (
                       typeof window !== "undefined" &&
