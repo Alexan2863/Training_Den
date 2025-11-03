@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import DashboardStatsWidget from "./DashboardStatsWidget";
-import ErrorDisplay from "./ErrorDisplay";
+import DashboardStatsWidget from "../shared/DashboardStatsWidget";
+import ErrorDisplay from "../shared/ErrorDisplay";
 
 interface EmployeeDashboardData {
   totalEnrolled: number;
