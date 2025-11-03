@@ -15,10 +15,10 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
     { name: "Home", href: "/dashboard", icon: House },
     {
       name: "Training Programs",
-      href: "/training-programs",
+      href: "/404",
       icon: PresentationChartIcon,
     },
-    { name: "Users", href: "/users", icon: UsersIcon },
+    { name: "Users", href: "/404", icon: UsersIcon },
   ];
 
   return (
