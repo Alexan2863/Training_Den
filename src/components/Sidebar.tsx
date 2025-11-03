@@ -3,6 +3,7 @@
 import { memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { House, PresentationChartIcon, UsersIcon } from "@phosphor-icons/react";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -11,9 +12,13 @@ interface SidebarProps {
 
 function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navItems = [
-    { name: "Home", href: "/dashboard" },
-    { name: "Training Programs", href: "/training-programs" },
-    { name: "Users", href: "/users" },
+    { name: "Home", href: "/dashboard", icon: House },
+    {
+      name: "Training Programs",
+      href: "/training-programs",
+      icon: PresentationChartIcon,
+    },
+    { name: "Users", href: "/users", icon: UsersIcon },
   ];
 
   return (
@@ -48,23 +53,27 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
 
           <nav className="flex flex-col gap-4">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="text-white text-lg hover:text-secondary-light transition-colors"
-                onClick={() => {
-                  if (
-                    typeof window !== "undefined" &&
-                    window.innerWidth < 1024
-                  ) {
-                    onClose();
-                  }
-                }}
-              >
-                {item.name}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="flex items-center gap-3 text-white text-lg hover:text-secondary-light transition-colors"
+                  onClick={() => {
+                    if (
+                      typeof window !== "undefined" &&
+                      window.innerWidth < 1024
+                    ) {
+                      onClose();
+                    }
+                  }}
+                >
+                  <Icon size={24} />
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
           </nav>
         </div>
       </aside>

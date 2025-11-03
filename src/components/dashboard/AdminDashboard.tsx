@@ -3,6 +3,12 @@
 import { useEffect, useState } from "react";
 import DashboardStatsWidget from "./DashboardStatsWidget";
 import ErrorDisplay from "./ErrorDisplay";
+import {
+  MedalIcon,
+  SuitcaseSimpleIcon,
+  TrendUpIcon,
+  UsersFour,
+} from "@phosphor-icons/react";
 
 interface AdminDashboardData {
   admins: number;
@@ -77,21 +83,25 @@ export default function AdminDashboard() {
             title="Total Admins"
             value={data.admins}
             variant="emerald"
+            icon={<TrendUpIcon size={32} />}
           />
           <DashboardStatsWidget
             title="Total Managers"
             value={data.managers}
             variant="rose"
+            icon={<SuitcaseSimpleIcon size={32} />}
           />
           <DashboardStatsWidget
             title="Total Trainers"
             value={data.trainers}
             variant="fuchsia"
+            icon={<MedalIcon size={32} />}
           />
           <DashboardStatsWidget
             title="Total Employees"
             value={data.employees}
             variant="sky"
+            icon={<UsersFour size={32} />}
           />
         </div>
       </div>

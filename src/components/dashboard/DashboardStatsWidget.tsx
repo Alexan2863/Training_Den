@@ -33,7 +33,7 @@ export default function DashboardStatsWidget({
 
   return (
     <div className={`${variantClasses[variant]} rounded-lg p-6 shadow-lg`}>
-      <div className="flex items-start justify-between">
+      <div className="flex items-center justify-between">
         <div className="flex-1">
           <p className={`text-3xl font-bold mt-2 ${valueClasses[variant]}`}>
             {value}
@@ -43,7 +43,13 @@ export default function DashboardStatsWidget({
             <p className="text-sm text-gray-500 mt-1">{description}</p>
           )}
         </div>
-        {icon && <div className="ml-4 text-gray-400">{icon}</div>}
+        {icon && (
+          <div
+            className={`flex items-center justify-center ${valueClasses[variant]}`}
+          >
+            {icon}
+          </div>
+        )}
       </div>
     </div>
   );
