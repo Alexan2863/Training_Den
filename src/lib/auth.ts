@@ -1,7 +1,5 @@
 import { createClient } from "./supabase/client";
 
-const supabase = createClient();
-
 export interface AuthUser {
   id: string;
   email: string;
@@ -23,6 +21,7 @@ export async function signUp(
   }
 ) {
   try {
+    const supabase = createClient();
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -53,6 +52,7 @@ export async function signUp(
 // Sign in
 export async function signIn(email: string, password: string) {
   try {
+    const supabase = createClient();
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -68,12 +68,14 @@ export async function signIn(email: string, password: string) {
 
 // Sign out
 export async function signOut() {
+  const supabase = createClient();
   const { error } = await supabase.auth.signOut();
   return { error };
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
   try {
+    const supabase = createClient();
     const {
       data: { user },
       error: authError,
@@ -96,6 +98,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 }
 
 export async function isAuthenticated(): Promise<boolean> {
+  const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

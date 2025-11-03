@@ -24,6 +24,9 @@ export default function LoginPage() {
       setIsLoading(false);
     } else if (user) {
       router.push("/dashboard");
+    } else {
+      setError("Login failed: unexpected response");
+      setIsLoading(false);
     }
   };
 

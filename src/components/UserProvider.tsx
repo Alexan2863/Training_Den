@@ -13,13 +13,14 @@ interface UserProviderProps {
 
 export function UserProvider({ initialUser, children }: UserProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(initialUser);
-  const supabase = createClient();
+  // Create client once - createClient() is a lazy singleton so it's safe to call
+  const [supabase] = useState(() => createClient());
 
   useEffect(() => {
     // Set up auth state listener
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
         // Fetch full user profile when signed in
         if (session?.user) {
@@ -29,7 +30,7 @@ export function UserProvider({ initialUser, children }: UserProviderProps) {
             .eq("id", session.user.id)
             .single();
 
-          setUser(profile as AuthUser);
+          setUser(profile ? (profile as AuthUser) : null);
         }
       } else if (event === "SIGNED_OUT") {
         setUser(null);
