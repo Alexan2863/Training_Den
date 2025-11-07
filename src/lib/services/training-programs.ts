@@ -37,7 +37,7 @@ export async function getTrainingProgramCards(
       title,
       deadline,
       is_active,
-      manager:users!training_program_manager_id_fkey(
+      manager:users(
         first_name,
         last_name
       )
@@ -107,15 +107,18 @@ export async function getTrainingProgramCards(
   });
 
   // Map to ProgramCard format
-  return programs.map((program) => ({
-    id: program.id.toString(),
-    title: program.title,
-    managerName: program.manager
-      ? `${program.manager.first_name} ${program.manager.last_name}`
-      : "Unknown",
-    deadline: program.deadline,
-    enrollmentCount: countMap.get(program.id) || 0,
-  }));
+  return programs.map((program) => {
+    const manager = program.manager as any;
+    return {
+      id: program.id.toString(),
+      title: program.title,
+      managerName: manager
+        ? `${manager.first_name} ${manager.last_name}`
+        : "Unknown",
+      deadline: program.deadline,
+      enrollmentCount: countMap.get(program.id) || 0,
+    };
+  });
 }
 
 /**
@@ -203,7 +206,7 @@ export async function getProgramDetails(
       is_active,
       created_at,
       updated_at,
-      manager:users!training_program_manager_id_fkey(
+      manager:users(
         first_name,
         last_name
       )
@@ -260,7 +263,7 @@ export async function getProgramSessionsForRole(
       duration_minutes,
       notes,
       is_active,
-      trainer:users!training_session_trainer_id_fkey(
+      trainer:users(
         first_name,
         last_name
       )
@@ -314,7 +317,7 @@ export async function getAssignedEmployees(
       assigned_by_manager_id,
       notes,
       created_at,
-      employee:users!program_assignment_employee_id_fkey(
+      employee:users(
         id,
         email,
         first_name,
@@ -432,7 +435,7 @@ export async function getProgramEnrollments(
       completed,
       completion_date,
       notes,
-      employee:users!session_enrollment_employee_id_fkey(
+      employee:users(
         id,
         email,
         first_name,
@@ -504,7 +507,7 @@ export async function getEmployeeEnrollments(
       completed,
       completion_date,
       notes,
-      employee:users!session_enrollment_employee_id_fkey(
+      employee:users(
         id,
         email,
         first_name,
