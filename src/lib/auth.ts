@@ -25,6 +25,16 @@ export async function signUp(
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        // Set user metadata on signup so it's cached in session
+        data: {
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          role: userData.role || "employee",
+          phone: userData.phone,
+          is_active: true,
+        },
+      },
     });
 
     if (authError) throw authError;
@@ -60,6 +70,28 @@ export async function signIn(email: string, password: string) {
 
     if (error) throw error;
 
+    // Fetch user profile and update session metadata
+    if (data.user) {
+      const { data: profile } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", data.user.id)
+        .single();
+
+      if (profile) {
+        // Update user metadata so it's cached in the session (cookies)
+        await supabase.auth.updateUser({
+          data: {
+            first_name: profile.first_name,
+            last_name: profile.last_name,
+            role: profile.role,
+            phone: profile.phone,
+            is_active: profile.is_active,
+          },
+        });
+      }
+    }
+
     return { user: data.user, error: null };
   } catch (error: any) {
     return { user: null, error };
@@ -83,6 +115,19 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
     if (authError || !user) return null;
 
+    // Try to get user data from session metadata first (cached)
+    if (user.user_metadata?.role) {
+      return {
+        id: user.id,
+        email: user.email!,
+        first_name: user.user_metadata.first_name,
+        last_name: user.user_metadata.last_name,
+        role: user.user_metadata.role,
+        phone: user.user_metadata.phone,
+      };
+    }
+
+    // Fallback: query database if metadata is missing
     const { data: profile, error: profileError } = await supabase
       .from("users")
       .select("*")

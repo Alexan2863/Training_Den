@@ -19,7 +19,7 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
   try {
     const supabase = await createClient();
 
-    // Get the authenticated user from Supabase session
+    // Get the authenticated user from Supabase session (uses cookies)
     const {
       data: { user },
       error: authError,
@@ -29,7 +29,20 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
       return null;
     }
 
-    // Get the user profile from the users table
+    // Try to get user data from session metadata first (cached in cookies)
+    if (user.user_metadata?.role) {
+      return {
+        id: user.id,
+        email: user.email!,
+        first_name: user.user_metadata.first_name,
+        last_name: user.user_metadata.last_name,
+        role: user.user_metadata.role,
+        phone: user.user_metadata.phone,
+        is_active: user.user_metadata.is_active ?? true,
+      };
+    }
+
+    // Fallback: query database if metadata is missing (for existing users)
     const { data: profile, error: profileError } = await supabase
       .from("users")
       .select("*")
