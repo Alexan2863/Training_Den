@@ -1,4 +1,6 @@
-const NotFoundPage = () => {
+import Link from "next/link";
+
+export default function NotFound() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--background)] to-[var(--muted)] flex items-center justify-center p-6">
       <div className="max-w-lg w-full text-center">
@@ -37,16 +39,16 @@ const NotFoundPage = () => {
             while we put the finishing touches.
           </p>
 
-          {/* Simple Navigation Hint */}
+          {/* Simple Navigation Hint - Fixed to use Next.js Link */}
           <div className="pt-8">
             <p className="text-sm text-[var(--muted-foreground)] font-medium">
               Return to{" "}
-              <a
-                href="/"
+              <Link
+                href="/dashboard"
                 className="text-[var(--primary)] hover:text-[var(--primary-dark)] underline transition-colors"
               >
-                Dashboard
-              </a>
+                dashboard
+              </Link>
             </p>
           </div>
         </div>
@@ -64,6 +66,4 @@ const NotFoundPage = () => {
       </div>
     </div>
   );
-};
-
-export default NotFoundPage;
+}
