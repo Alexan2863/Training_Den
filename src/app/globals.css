@@ -182,6 +182,8 @@ body {
   border-radius: var(--radius-lg);
   background: var(--white-800, #fafbff);
   margin-bottom: 0.5rem;
+  width: auto;
+  height: fit-content;
 }
 
 /* Could use border-radius: 10px 10px 0 0; if we would like radius to be smaller instead of tailwind*/

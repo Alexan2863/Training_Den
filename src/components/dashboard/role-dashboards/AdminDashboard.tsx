@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import DashboardStatsWidget from "../shared/DashboardStatsWidget";
-import TrainingCard from "../shared/TrainingCard";
 import ErrorDisplay from "../shared/ErrorDisplay";
 import {
   MedalIcon,
@@ -122,22 +121,10 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Deadlines</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        <div>
-          <TrainingCard/>
-        </div>
-
-        <div>
-          <TrainingCard/>
-        </div>
-
-        <div>
-          <TrainingCard/>
-        </div>
-
-      </div>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        Upcoming Deadlines
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
     </div>
   );
 }
