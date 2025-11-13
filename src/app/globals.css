@@ -114,6 +114,7 @@ body {
   color: var(--primary);
   padding: 0.5rem 1rem;
   border-radius: var(--radius-lg);
+  border: 1px solid var(--primary);
   font-weight: 500;
   transition: background-color 0.2s;
   cursor: pointer;
@@ -172,4 +173,37 @@ body {
 .swift-loading.swift-loaded {
   opacity: 1;
   top: 0px;
+}
+
+
+/* Training Card Styles */
+.TrainingCardV1 {
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-lg);
+  background: var(--white-800, #FAFBFF);
+  margin-bottom: .5rem;
+}
+
+/* Could use border-radius: 10px 10px 0 0; if we would like radius to be smaller instead of tailwind*/
+.deadline{
+  padding: 1.5rem;
+  height: 30px;
+  flex-shrink: 0;
+  background: var(--fuchsia-50, #FDF4FF);
+  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.16);
+  color: var(--fuchsia-800, #86198F);
+  font-size: 16px;
+  
+}
+
+/* Users table */
+.usertable{
+  width: 100%;
+  border-radius: 25px;
+}
+
+.usertablehead{
+background-color: var( --primary, #4c1f7a);
+color: white;
+text-align: left;
 }

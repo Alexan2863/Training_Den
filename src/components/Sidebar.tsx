@@ -18,7 +18,7 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
       href: "/not-found",
       icon: PresentationChartIcon,
     },
-    { name: "Users", href: "/not-found", icon: UsersIcon },
+    { name: "Users", href: "/users", icon: UsersIcon },
   ];
 
   return (
