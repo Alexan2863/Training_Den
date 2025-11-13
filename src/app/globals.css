@@ -195,3 +195,15 @@ body {
   font-size: 16px;
   
 }
+
+/* Users table */
+.usertable{
+  width: 100%;
+  border-radius: 25px;
+}
+
+.usertablehead{
+background-color: var( --primary, #4c1f7a);
+color: white;
+text-align: left;
+}
