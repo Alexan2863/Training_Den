@@ -15,7 +15,7 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
     { name: "Home", href: "/dashboard", icon: House },
     {
       name: "Training Programs",
-      href: "/404",
+      href: "/not-found",
       icon: PresentationChartIcon,
     },
     { name: "Users", href: "/users", icon: UsersIcon },
