@@ -20,11 +20,13 @@ import type {
  * Get training program cards filtered by user role
  * @param userId - The authenticated user's ID
  * @param role - The user's role
+ * @param upcomingOnly - If true, only return programs with deadlines within 2 weeks
  * @returns Array of program cards for widget display
  */
 export async function getTrainingProgramCards(
   userId: string,
-  role: "admin" | "manager" | "trainer" | "employee"
+  role: "admin" | "manager" | "trainer" | "employee",
+  upcomingOnly: boolean = false
 ): Promise<ProgramCard[]> {
   const supabase = await createClient();
 
@@ -44,6 +46,16 @@ export async function getTrainingProgramCards(
     `
     )
     .eq("is_active", true);
+
+  // Apply date filter if upcomingOnly is true
+  if (upcomingOnly) {
+    const now = new Date();
+    const twoWeeksFromNow = new Date();
+    twoWeeksFromNow.setDate(now.getDate() + 14);
+    query = query
+      .gte("deadline", now.toISOString())
+      .lte("deadline", twoWeeksFromNow.toISOString());
+  }
 
   // Apply role-based filters
   if (role === "manager") {

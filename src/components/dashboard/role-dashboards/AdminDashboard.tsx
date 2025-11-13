@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import DashboardStatsWidget from "../shared/DashboardStatsWidget";
 import ErrorDisplay from "../shared/ErrorDisplay";
+import TrainingProgramsWidget from "@/components/training/TrainingProgramsWidget";
 import {
   MedalIcon,
   SuitcaseSimpleIcon,
@@ -75,7 +76,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className={`${loaded ? "loaded loading" : "loading"} space-y-6`}>
+    <div className={`${loaded ? "loaded" : "loading"} space-y-6`}>
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Overview</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -121,10 +122,12 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
-        Upcoming Deadlines
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Upcoming Programs
+        </h3>
+        <TrainingProgramsWidget />
+      </div>
     </div>
   );
 }
