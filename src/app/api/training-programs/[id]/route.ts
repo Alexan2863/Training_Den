@@ -8,7 +8,7 @@ import {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // Require authentication (any role)
   const authResult = await requireAuth();
@@ -17,7 +17,7 @@ export async function GET(
   }
 
   const { user } = authResult;
-  const programId = params.id;
+  const { id: programId } = await params;
 
   try {
     // Check authorization
