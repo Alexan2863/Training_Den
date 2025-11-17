@@ -87,7 +87,9 @@ export default function TrainingProgramsWidget({
   }
 
   if (error) {
-    return <ErrorDisplay error={error} title="Failed to load dashboard" />;
+    return (
+      <ErrorDisplay error={error} title="Failed to load training programs" />
+    );
   }
 
   if (!programs || programs.length === 0) {

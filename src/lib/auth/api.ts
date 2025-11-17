@@ -14,6 +14,9 @@ export interface AuthenticatedUser {
 /**
  * Get the authenticated user from the request
  * Uses server-side Supabase client with cookies
+ *
+ * SECURITY: Always validates role and is_active from database to prevent
+ * privilege escalation from stale or manipulated session metadata
  */
 export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> {
   try {
@@ -29,23 +32,11 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
       return null;
     }
 
-    // Try to get user data from session metadata first (cached in cookies)
-    if (user.user_metadata?.role) {
-      return {
-        id: user.id,
-        email: user.email!,
-        first_name: user.user_metadata.first_name,
-        last_name: user.user_metadata.last_name,
-        role: user.user_metadata.role,
-        phone: user.user_metadata.phone,
-        is_active: user.user_metadata.is_active ?? true,
-      };
-    }
-
-    // Fallback: query database if metadata is missing (for existing users)
+    // Always query database for critical authorization fields (role, is_active)
+    // to prevent privilege escalation from stale or manipulated metadata
     const { data: profile, error: profileError } = await supabase
       .from("users")
-      .select("*")
+      .select("id, email, first_name, last_name, role, phone, is_active")
       .eq("id", user.id)
       .single();
 
@@ -73,7 +64,6 @@ export async function requireAuth(): Promise<
     return NextResponse.json(
       {
         success: false,
-        error: "Unauthorized",
         message: "You must be logged in to access this resource.",
       },
       { status: 401 }
@@ -84,7 +74,6 @@ export async function requireAuth(): Promise<
     return NextResponse.json(
       {
         success: false,
-        error: "Forbidden",
         message: "Your account is inactive.",
       },
       { status: 403 }
@@ -115,7 +104,6 @@ export async function requireRole(
     return NextResponse.json(
       {
         success: false,
-        error: "Forbidden",
         message: "You do not have permission to access this resource.",
       },
       { status: 403 }

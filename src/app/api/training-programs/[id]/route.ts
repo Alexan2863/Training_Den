@@ -27,7 +27,6 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          error: "Forbidden",
           message: "You do not have permission to access this program.",
         },
         { status: 403 }
@@ -54,7 +53,6 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          error: "Not Found",
           message: "Training program not found or inactive.",
         },
         { status: 404 }
@@ -64,7 +62,6 @@ export async function GET(
     return NextResponse.json(
       {
         success: false,
-        error: errorMessage,
         message: "Failed to fetch training program details.",
       },
       { status: 500 }

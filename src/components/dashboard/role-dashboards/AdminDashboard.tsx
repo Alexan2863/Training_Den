@@ -126,7 +126,7 @@ export default function AdminDashboard() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           Upcoming Programs
         </h3>
-        <TrainingProgramsWidget />
+        <TrainingProgramsWidget upcomingOnly={true} />
       </div>
     </div>
   );

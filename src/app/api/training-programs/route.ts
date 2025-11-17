@@ -31,7 +31,6 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        error: errorMessage,
         message: "Failed to fetch training programs.",
       },
       { status: 500 }

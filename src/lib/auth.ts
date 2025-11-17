@@ -70,27 +70,9 @@ export async function signIn(email: string, password: string) {
 
     if (error) throw error;
 
-    // Fetch user profile and update session metadata
-    if (data.user) {
-      const { data: profile } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", data.user.id)
-        .single();
-
-      if (profile) {
-        // Update user metadata so it's cached in the session (cookies)
-        await supabase.auth.updateUser({
-          data: {
-            first_name: profile.first_name,
-            last_name: profile.last_name,
-            role: profile.role,
-            phone: profile.phone,
-            is_active: profile.is_active,
-          },
-        });
-      }
-    }
+    // Note: We no longer update session metadata here to reduce sign-in latency.
+    // Authorization checks always validate against the database in getAuthenticatedUser()
+    // to prevent privilege escalation from stale metadata.
 
     return { user: data.user, error: null };
   } catch (error: any) {
@@ -115,22 +97,11 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
     if (authError || !user) return null;
 
-    // Try to get user data from session metadata first (cached)
-    if (user.user_metadata?.role) {
-      return {
-        id: user.id,
-        email: user.email!,
-        first_name: user.user_metadata.first_name,
-        last_name: user.user_metadata.last_name,
-        role: user.user_metadata.role,
-        phone: user.user_metadata.phone,
-      };
-    }
-
-    // Fallback: query database if metadata is missing
+    // Always query database to get current user data
+    // This ensures we have up-to-date role and status information
     const { data: profile, error: profileError } = await supabase
       .from("users")
-      .select("*")
+      .select("id, email, first_name, last_name, role, phone")
       .eq("id", user.id)
       .single();
 

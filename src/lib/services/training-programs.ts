@@ -254,7 +254,7 @@ export async function getProgramDetails(
  * Get program sessions with role-specific filtering
  * @param programId - The program ID
  * @param role - The user's role
- * @param userId - The user's ID (for trainer ownership marking)
+ * @param userId - The user's ID (required for trainer role to determine ownership)
  * @returns Array of sessions with trainer details
  */
 export async function getProgramSessionsForRole(
@@ -263,6 +263,11 @@ export async function getProgramSessionsForRole(
   userId?: string
 ): Promise<ProgramSession[]> {
   const supabase = await createClient();
+
+  // Validate that userId is provided for trainer role
+  if (role === "trainer" && !userId) {
+    throw new Error("userId is required for trainer role");
+  }
 
   const { data: sessions, error } = await supabase
     .from("training_session")
@@ -306,7 +311,7 @@ export async function getProgramSessionsForRole(
       duration_minutes: session.duration_minutes,
       notes: session.notes,
       is_active: session.is_active,
-      isOwner: role === "trainer" && userId ? session.trainer_id === userId : undefined,
+      isOwner: role === "trainer" ? session.trainer_id === userId : undefined,
     };
   });
 }
@@ -424,20 +429,8 @@ export async function getProgramEnrollments(
 ): Promise<SessionEnrollmentInfo[]> {
   const supabase = await createClient();
 
-  // First get all session IDs for this program
-  const { data: sessions } = await supabase
-    .from("training_session")
-    .select("id")
-    .eq("program_id", programId)
-    .eq("is_active", true);
-
-  const sessionIds = sessions?.map((s) => s.id) ?? [];
-
-  if (sessionIds.length === 0) {
-    return [];
-  }
-
-  // Get all enrollments for these sessions
+  // Use a join to get enrollments directly filtered by program_id through training_session
+  // This eliminates the need for two separate queries
   const { data: enrollments, error } = await supabase
     .from("session_enrollment")
     .select(
@@ -452,10 +445,15 @@ export async function getProgramEnrollments(
         email,
         first_name,
         last_name
+      ),
+      training_session!inner(
+        program_id,
+        is_active
       )
     `
     )
-    .in("session_id", sessionIds);
+    .eq("training_session.program_id", programId)
+    .eq("training_session.is_active", true);
 
   if (error) {
     throw new Error(`Failed to fetch enrollments: ${error.message}`);
@@ -496,20 +494,8 @@ export async function getEmployeeEnrollments(
 ): Promise<SessionEnrollmentInfo[]> {
   const supabase = await createClient();
 
-  // Get all session IDs for this program
-  const { data: sessions } = await supabase
-    .from("training_session")
-    .select("id")
-    .eq("program_id", programId)
-    .eq("is_active", true);
-
-  const sessionIds = sessions?.map((s) => s.id) ?? [];
-
-  if (sessionIds.length === 0) {
-    return [];
-  }
-
-  // Get employee's enrollments
+  // Use a join to get enrollments directly filtered by program_id through training_session
+  // This eliminates the need for two separate queries
   const { data: enrollments, error } = await supabase
     .from("session_enrollment")
     .select(
@@ -524,10 +510,15 @@ export async function getEmployeeEnrollments(
         email,
         first_name,
         last_name
+      ),
+      training_session!inner(
+        program_id,
+        is_active
       )
     `
     )
-    .in("session_id", sessionIds)
+    .eq("training_session.program_id", programId)
+    .eq("training_session.is_active", true)
     .eq("employee_id", employeeId);
 
   if (error) {
@@ -564,54 +555,45 @@ export async function getEmployeeEnrollments(
  */
 export async function getAdminStats(programId: string): Promise<AdminStats> {
   const supabase = await createClient();
+  const now = new Date().toISOString();
 
-  // Get total enrolled (program assignments)
-  const { count: totalEnrolled } = await supabase
-    .from("program_assignment")
-    .select("*", { count: "exact", head: true })
-    .eq("program_id", programId);
+  // Use database aggregation to calculate stats in parallel
+  const [totalEnrolledResult, completedResult, overdueResult] =
+    await Promise.all([
+      // Total enrolled (program assignments)
+      supabase
+        .from("program_assignment")
+        .select("*", { count: "exact", head: true })
+        .eq("program_id", programId),
 
-  // Get all sessions for this program
-  const { data: sessions } = await supabase
-    .from("training_session")
-    .select("id, session_datetime")
-    .eq("program_id", programId)
-    .eq("is_active", true);
+      // Completed enrollments: join with training_session and count where completed=true
+      supabase
+        .from("session_enrollment")
+        .select("*, training_session!inner(program_id)", {
+          count: "exact",
+          head: true,
+        })
+        .eq("training_session.program_id", programId)
+        .eq("training_session.is_active", true)
+        .eq("completed", true),
 
-  const sessionIds = sessions?.map((s) => s.id) ?? [];
-
-  if (sessionIds.length === 0) {
-    return {
-      totalEnrolled: totalEnrolled ?? 0,
-      completed: 0,
-      overdue: 0,
-    };
-  }
-
-  // Get all enrollments
-  const { data: enrollments } = await supabase
-    .from("session_enrollment")
-    .select("completed, session_id")
-    .in("session_id", sessionIds);
-
-  const completed = enrollments?.filter((e) => e.completed).length ?? 0;
-
-  // Count overdue (not completed AND session date has passed)
-  const now = new Date();
-  const sessionDateMap = new Map(
-    sessions?.map((s) => [s.id, new Date(s.session_datetime)]) ?? []
-  );
-
-  const overdue =
-    enrollments?.filter((e) => {
-      const sessionDate = sessionDateMap.get(e.session_id);
-      return !e.completed && sessionDate && sessionDate < now;
-    }).length ?? 0;
+      // Overdue enrollments: not completed AND session datetime has passed
+      supabase
+        .from("session_enrollment")
+        .select("*, training_session!inner(program_id, session_datetime)", {
+          count: "exact",
+          head: true,
+        })
+        .eq("training_session.program_id", programId)
+        .eq("training_session.is_active", true)
+        .eq("completed", false)
+        .lt("training_session.session_datetime", now),
+    ]);
 
   return {
-    totalEnrolled: totalEnrolled ?? 0,
-    completed,
-    overdue,
+    totalEnrolled: totalEnrolledResult.count ?? 0,
+    completed: completedResult.count ?? 0,
+    overdue: overdueResult.count ?? 0,
   };
 }
 
@@ -820,6 +802,8 @@ export async function getProgramDetailForRole(
     case "employee":
       return getEmployeeProgramDetail(programId, userId);
     default:
-      throw new Error(`Invalid role: ${role}`);
+      // TypeScript's exhaustiveness check ensures this is unreachable
+      const _exhaustiveCheck: never = role;
+      throw new Error(`Invalid role: ${_exhaustiveCheck}`);
   }
 }
