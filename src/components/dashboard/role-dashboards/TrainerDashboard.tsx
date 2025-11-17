@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import DashboardStatsWidget from "../shared/DashboardStatsWidget";
 import ErrorDisplay from "../shared/ErrorDisplay";
+import TrainingProgramsWidget from "@/components/training/TrainingProgramsWidget";
 import { getCurrentUser } from "@/lib/auth";
 
 interface TrainerDashboardData {
@@ -71,14 +72,21 @@ export default function TrainerDashboard() {
   }
 
   return (
-    <div
-      className={`${loaded ? "loaded loading" : "loading"} grid grid-cols-1 md:grid-cols-2 gap-6`}
-    >
-      <DashboardStatsWidget
-        title="Your Sessions"
-        value={data.activeSessions}
-        variant="default"
-      />
+    <div className={`${loaded ? "loaded" : "loading"} space-y-6`}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <DashboardStatsWidget
+          title="Your Sessions"
+          value={data.activeSessions}
+          variant="default"
+        />
+      </div>
+
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Your Upcoming Programs
+        </h3>
+        <TrainingProgramsWidget upcomingOnly={true} />
+      </div>
     </div>
   );
 }

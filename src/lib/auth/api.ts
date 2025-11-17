@@ -14,12 +14,15 @@ export interface AuthenticatedUser {
 /**
  * Get the authenticated user from the request
  * Uses server-side Supabase client with cookies
+ *
+ * SECURITY: Always validates role and is_active from database to prevent
+ * privilege escalation from stale or manipulated session metadata
  */
 export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> {
   try {
     const supabase = await createClient();
 
-    // Get the authenticated user from Supabase session
+    // Get the authenticated user from Supabase session (uses cookies)
     const {
       data: { user },
       error: authError,
@@ -29,10 +32,11 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
       return null;
     }
 
-    // Get the user profile from the users table
+    // Always query database for critical authorization fields (role, is_active)
+    // to prevent privilege escalation from stale or manipulated metadata
     const { data: profile, error: profileError } = await supabase
       .from("users")
-      .select("*")
+      .select("id, email, first_name, last_name, role, phone, is_active")
       .eq("id", user.id)
       .single();
 
@@ -60,7 +64,6 @@ export async function requireAuth(): Promise<
     return NextResponse.json(
       {
         success: false,
-        error: "Unauthorized",
         message: "You must be logged in to access this resource.",
       },
       { status: 401 }
@@ -71,7 +74,6 @@ export async function requireAuth(): Promise<
     return NextResponse.json(
       {
         success: false,
-        error: "Forbidden",
         message: "Your account is inactive.",
       },
       { status: 403 }
@@ -102,7 +104,6 @@ export async function requireRole(
     return NextResponse.json(
       {
         success: false,
-        error: "Forbidden",
         message: "You do not have permission to access this resource.",
       },
       { status: 403 }

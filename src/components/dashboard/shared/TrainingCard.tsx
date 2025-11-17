@@ -1,28 +1,46 @@
-export default function TrainingCard() {
-    return (
-      <div className="TrainingCardV1">
-        <div className="deadline flex items-center rounded-t-lg rounded-b-none">
-          <p>Deadline: November 30, 2025</p>
-        </div>
-        <div>
-            <div className="flex items-center">
-                <p className="font-bold p-4 pb-2 text-lg">Data Security & Privacy Training</p>
+import { ProgramCard } from "@/lib/types/training-programs";
+import { StudentIcon } from "@phosphor-icons/react";
 
-                <div className="flex ml-auto pr-5">
-                    <p className="text-xl pr-1">5</p>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" className="bi bi-person-check" viewBox="0 0 16 16">
-                        <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m1.679-4.493-1.335 2.226a.75.75 0 0 1-1.174.144l-.774-.773a.5.5 0 0 1 .708-.708l.547.548 1.17-1.951a.5.5 0 1 1 .858.514M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/>
-                        <path d="M8.256 14a4.5 4.5 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.711 10 8 10q.39 0 .74.025c.226-.341.496-.65.804-.918Q8.844 9.002 8 9c-5 0-6 3-6 4s1 1 1 1z"/>
-                    </svg>
-                </div>
+interface TrainingCardProps {
+  program: ProgramCard;
+  onView: (programId: string) => void;
+}
 
-            </div>
+export default function TrainingCard({ program, onView }: TrainingCardProps) {
+  const formattedDeadline = new Date(program.deadline).toLocaleDateString(
+    "en-US",
+    {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }
+  );
 
-            <p className="pl-5">Lisa Wang</p>
-        </div>
-        <div className="flex pr-4 pb-4">
-          <button className="btn-secondary ml-auto">View</button>
-        </div>
+  return (
+    <div className="TrainingCardV1">
+      <div className="deadline flex items-center rounded-t-lg rounded-b-none">
+        <p>Deadline: {formattedDeadline}</p>
       </div>
-    );
-  }
+      <div>
+        <div className="flex items-center">
+          <p className="font-bold p-4 pb-2 text-lg">{program.title}</p>
+
+          <div className="flex ml-auto pr-5">
+            <p className="text-xl pr-1">{program.enrollmentCount}</p>
+            <StudentIcon weight="fill" size={32} />
+          </div>
+        </div>
+
+        <p className="pl-5">{program.managerName}</p>
+      </div>
+      <div className="flex pr-4 pb-4">
+        <button
+          className="btn-secondary ml-auto"
+          onClick={() => onView(program.id)}
+        >
+          View
+        </button>
+      </div>
+    </div>
+  );
+}
