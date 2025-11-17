@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { UserDisplay } from "@/lib/types/users";
 import { getCurrentUser } from "@/lib/auth";
@@ -12,17 +12,7 @@ export default function AdminUsersPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    checkUserRole();
-    fetchUsers();
-  }, []);
-
-  async function checkUserRole() {
-    const user = await getCurrentUser();
-    setIsAdmin(user?.role === "admin");
-  }
-
-  async function fetchUsers() {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await fetch("/api/users");
       const data = await response.json();
@@ -35,7 +25,17 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    async function checkUserRole() {
+      const user = await getCurrentUser();
+      setIsAdmin(user?.role === "admin");
+    }
+
+    checkUserRole();
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleEdit = (userId: string) => {
     router.push(`/admin/users/${userId}`);

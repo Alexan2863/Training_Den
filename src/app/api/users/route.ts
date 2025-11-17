@@ -3,6 +3,7 @@ import { requireAuth, requireRole, isAuthError } from "@/lib/auth/api";
 import { createClient } from "@/lib/supabase/server";
 import { toUserDisplay } from "@/lib/utils/user-helpers";
 import { getErrorMessage } from "@/lib/utils/errors";
+import { VALID_ROLES, ROLE_ORDER } from "@/lib/types/users";
 
 // GET /api/users - List all users (any authenticated user can view)
 export async function GET(request: NextRequest) {
@@ -47,12 +48,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform to UserDisplay format and sort by role, then by name
-    const roleOrder = { admin: 0, manager: 1, trainer: 2, employee: 3 };
     const users = data.map(toUserDisplay).sort((a, b) => {
-      const roleComparison = roleOrder[a.role] - roleOrder[b.role];
+      const roleComparison = ROLE_ORDER[a.role] - ROLE_ORDER[b.role];
       if (roleComparison !== 0) return roleComparison;
 
-      return a.last_name.localeCompare(b.last_name);
+      // Sort by last name, then by first name
+      const lastNameComparison = a.last_name.localeCompare(b.last_name);
+      if (lastNameComparison !== 0) return lastNameComparison;
+
+      return a.first_name.localeCompare(b.first_name);
     });
 
     return NextResponse.json({
@@ -98,7 +102,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate role
-    if (!["admin", "manager", "trainer", "employee"].includes(role)) {
+    if (!VALID_ROLES.includes(role)) {
       return NextResponse.json(
         {
           success: false,

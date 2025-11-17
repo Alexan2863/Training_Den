@@ -27,9 +27,28 @@ export function isValidEmail(email: string): boolean {
 }
 
 /**
- * Validate phone format (optional, basic validation)
+ * Validate phone format (optional, flexible validation)
+ * Accepts various formats:
+ * - 123-456-7890
+ * - (123) 456-7890
+ * - 123.456.7890
+ * - 1234567890
+ * - +1 123-456-7890
+ * - +1-123-456-7890
+ * Validates that phone contains 10 digits (optionally with +1 country code)
  */
 export function isValidPhone(phone: string): boolean {
-  const phoneRegex = /^\d{3}-\d{4}$/;
-  return phoneRegex.test(phone);
+  // Remove all non-digit characters except '+'
+  const digitsOnly = phone.replace(/[^\d+]/g, "");
+
+  // Check if it's 10 digits or 11 digits starting with +1
+  if (digitsOnly.length === 10 && /^\d{10}$/.test(digitsOnly)) {
+    return true;
+  }
+
+  if (digitsOnly.length === 11 && /^\+1\d{10}$/.test(digitsOnly)) {
+    return true;
+  }
+
+  return false;
 }

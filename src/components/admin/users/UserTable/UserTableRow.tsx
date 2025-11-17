@@ -1,12 +1,7 @@
 import { User } from "@/lib/types/users";
 import UserAvatar from "./UserAvatar";
 import RoleBadge from "./RoleBadge";
-import {
-  PencilSimple,
-  PencilSimpleIcon,
-  Trash,
-  TrashIcon,
-} from "@phosphor-icons/react";
+import { PencilSimpleIcon, TrashIcon } from "@phosphor-icons/react";
 
 interface UserTableRowProps {
   user: User;

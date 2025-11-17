@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth/api";
 import { createClient } from "@/lib/supabase/server";
 import { getErrorMessage } from "@/lib/utils/errors";
+import { VALID_ROLES } from "@/lib/types/users";
 
 // GET /api/users/by-role/{role} - Get users by role (any authenticated user)
 export async function GET(
@@ -20,7 +21,7 @@ export async function GET(
     const supabase = await createClient();
 
     // Validate role
-    if (!["admin", "manager", "trainer", "employee"].includes(role)) {
+    if (!VALID_ROLES.includes(role as any)) {
       return NextResponse.json(
         {
           success: false,
