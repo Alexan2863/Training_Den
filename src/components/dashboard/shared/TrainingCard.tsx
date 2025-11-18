@@ -7,14 +7,17 @@ interface TrainingCardProps {
 }
 
 export default function TrainingCard({ program, onView }: TrainingCardProps) {
-  const formattedDeadline = new Date(program.deadline).toLocaleDateString(
-    "en-US",
-    {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }
-  );
+  const deadlineDate = new Date(program.deadline);
+  const datePart = deadlineDate.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const timePart = deadlineDate.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  const formattedDeadline = `${datePart} - ${timePart}`;
 
   return (
     <div className="TrainingCardV1">

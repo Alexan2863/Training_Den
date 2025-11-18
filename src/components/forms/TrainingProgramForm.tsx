@@ -5,6 +5,9 @@ import { CaretDownIcon, XIcon } from "@phosphor-icons/react";
 
 interface TrainingProgramFormProps {
   onSuccess?: () => void;
+  onCancel?: () => void; // Called when form is cancelled (useful for edit mode navigation)
+  programId?: string; // If provided, form is in edit mode
+  initialOpen?: boolean; // Auto-open the form (useful for edit pages)
 }
 
 interface Manager {
@@ -21,8 +24,12 @@ interface Session {
 
 export default function TrainingProgramForm({
   onSuccess,
+  onCancel,
+  programId,
+  initialOpen = false,
 }: TrainingProgramFormProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initialOpen);
+  const isEditMode = !!programId;
 
   // Form state - Program fields
   const [title, setTitle] = useState("");
@@ -43,6 +50,64 @@ export default function TrainingProgramForm({
   const [managers, setManagers] = useState<Manager[]>([]);
   const [trainers, setTrainers] = useState<Manager[]>([]);
   const [loadingData, setLoadingData] = useState(false);
+
+  // Fetch program data when in edit mode
+  useEffect(() => {
+    async function fetchProgramData() {
+      if (!programId) return;
+
+      setLoadingData(true);
+      try {
+        const response = await fetch(`/api/training-programs/${programId}`);
+        const data = await response.json();
+
+        if (data.success && data.data) {
+          const program = data.data;
+
+          // Populate program fields
+          setTitle(program.title || "");
+          setDescription(program.notes || "");
+          setManagerId(program.manager_id || "");
+          setDeadline(program.deadline ? program.deadline.split('T')[0] : "");
+          setIsActive(program.is_active ?? true);
+
+          // Populate sessions if they exist
+          if ("sessions" in program && program.sessions && program.sessions.length > 0) {
+            const formattedSessions = program.sessions.map((session: any) => {
+              const datetime = new Date(session.session_datetime);
+              const dateStr = datetime.toISOString().split('T')[0];
+              const timeStr = datetime.toTimeString().slice(0, 5);
+
+              return {
+                sessionDate: dateStr,
+                sessionTime: timeStr,
+                trainerId: session.trainer_id || "",
+                isActive: session.is_active ?? true,
+              };
+            });
+            setSessions(formattedSessions);
+
+            // Set duration from first session (all sessions should have same duration)
+            const firstSessionDuration = program.sessions[0]?.duration_minutes;
+            if (firstSessionDuration !== undefined && firstSessionDuration !== null) {
+              setDuration(firstSessionDuration.toString());
+            }
+          }
+        } else {
+          setError(data.message || "Failed to load program data");
+        }
+      } catch (err) {
+        setError("Failed to fetch program data");
+        console.error("Error fetching program:", err);
+      } finally {
+        setLoadingData(false);
+      }
+    }
+
+    if (isEditMode && open) {
+      fetchProgramData();
+    }
+  }, [programId, isEditMode, open]);
 
   // Fetch managers and trainers when modal opens
   useEffect(() => {
@@ -141,6 +206,10 @@ export default function TrainingProgramForm({
   const handleClose = () => {
     setOpen(false);
     resetForm();
+    // In edit mode, navigate away from edit page
+    if (onCancel) {
+      onCancel();
+    }
   };
 
   // Handle submit
@@ -175,8 +244,13 @@ export default function TrainingProgramForm({
         sessions: sessionsData,
       };
 
-      const response = await fetch("/api/training-programs", {
-        method: "POST",
+      const url = isEditMode
+        ? `/api/training-programs/${programId}`
+        : "/api/training-programs";
+      const method = isEditMode ? "PATCH" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -186,7 +260,8 @@ export default function TrainingProgramForm({
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.message || "Failed to create training program");
+        const action = isEditMode ? "update" : "create";
+        throw new Error(data.message || `Failed to ${action} training program`);
       }
 
       handleClose();
@@ -200,13 +275,15 @@ export default function TrainingProgramForm({
 
   return (
     <>
-      {/* Button to open modal */}
-      <button
-        onClick={() => setOpen(true)}
-        className="px-6 py-2 bg-purple-600 btn-primary"
-      >
-        Create Training Program
-      </button>
+      {/* Button to open modal - only show in create mode */}
+      {!isEditMode && (
+        <button
+          onClick={() => setOpen(true)}
+          className="px-6 py-2 bg-purple-600 btn-primary"
+        >
+          Create Training Program
+        </button>
+      )}
 
       {/* Backdrop */}
       {open && (
@@ -220,18 +297,21 @@ export default function TrainingProgramForm({
         } fixed inset-0 z-50 justify-center items-center p-4`}
       >
         <div className="bg-white border-2 border-ring rounded-xl w-full max-w-lg shadow-xl relative max-h-[90vh] flex flex-col">
-          {/* Close Button */}
-          <button
-            onClick={handleClose}
-            className="absolute top-4 right-4 text-gray-600 hover:text-black z-10"
-            disabled={isSubmitting}
-          >
-            <XIcon className="cursor-pointer hover:text-secondary" size={24} />
-          </button>
+          {/* Fixed Header with Close Button */}
+          <div className="flex-shrink-0 flex justify-end p-4 border-b border-gray-200">
+            <button
+              onClick={handleClose}
+              className="text-gray-600 hover:text-black"
+              disabled={isSubmitting}
+              type="button"
+            >
+              <XIcon className="cursor-pointer hover:text-secondary" size={24} />
+            </button>
+          </div>
 
           {/* Error Banner */}
           {error && (
-            <div className="mx-6 mt-6 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div className="flex-shrink-0 mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
               <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
@@ -241,8 +321,10 @@ export default function TrainingProgramForm({
             onSubmit={handleSubmit}
             className="flex flex-col flex-1 overflow-hidden"
           >
-            <div className="overflow-y-auto px-6 pt-10 pb-6 flex-1">
-              <h2 className="text-3xl font-semibold mb-6">Create Training</h2>
+            <div className="overflow-y-auto px-6 pt-6 pb-6 flex-1">
+              <h2 className="text-3xl font-semibold mb-6">
+                {isEditMode ? "Edit Training Program" : "Create Training"}
+              </h2>
               {/* Title */}
               <div className="mb-4">
                 <label className="block font-semibold mb-1">
@@ -331,30 +413,32 @@ export default function TrainingProgramForm({
                 />
               </div>
 
-              {/* Status */}
-              <div className="mb-4">
-                <label className="block font-semibold mb-1">
-                  Status <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <select
-                    className="w-full border rounded-md pl-4 pr-10 py-2 appearance-none cursor-pointer"
-                    value={isActive ? "active" : "inactive"}
-                    onChange={(e) => setIsActive(e.target.value === "active")}
-                    disabled={isSubmitting}
-                    required
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <CaretDownIcon
-                      className="w-5 h-5 text-gray-600"
-                      size={20}
-                    />
+              {/* Status - Only show in edit mode */}
+              {isEditMode && (
+                <div className="mb-4">
+                  <label className="block font-semibold mb-1">
+                    Status <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      className="w-full border rounded-md pl-4 pr-10 py-2 appearance-none cursor-pointer"
+                      value={isActive ? "active" : "inactive"}
+                      onChange={(e) => setIsActive(e.target.value === "active")}
+                      disabled={isSubmitting}
+                      required
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <CaretDownIcon
+                        className="w-5 h-5 text-gray-600"
+                        size={20}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Divider */}
               <hr className="my-6 border-gray-300" />
@@ -460,36 +544,38 @@ export default function TrainingProgramForm({
                     </div>
                   </div>
 
-                  {/* Session Status */}
-                  <div className="mb-4">
-                    <label className="block font-semibold mb-1">
-                      Status <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        className="w-full border rounded-md pl-4 pr-10 py-2 appearance-none cursor-pointer bg-white"
-                        value={session.isActive ? "active" : "inactive"}
-                        onChange={(e) =>
-                          updateSession(
-                            index,
-                            "isActive",
-                            e.target.value === "active"
-                          )
-                        }
-                        disabled={isSubmitting}
-                        required
-                      >
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <CaretDownIcon
-                          className="w-5 h-5 text-gray-600"
-                          size={20}
-                        />
+                  {/* Session Status - Only show in edit mode */}
+                  {isEditMode && (
+                    <div className="mb-4">
+                      <label className="block font-semibold mb-1">
+                        Status <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <select
+                          className="w-full border rounded-md pl-4 pr-10 py-2 appearance-none cursor-pointer bg-white"
+                          value={session.isActive ? "active" : "inactive"}
+                          onChange={(e) =>
+                            updateSession(
+                              index,
+                              "isActive",
+                              e.target.value === "active"
+                            )
+                          }
+                          disabled={isSubmitting}
+                          required
+                        >
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <CaretDownIcon
+                            className="w-5 h-5 text-gray-600"
+                            size={20}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -509,7 +595,13 @@ export default function TrainingProgramForm({
                 className="px-6 py-2 rounded-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isSubmitting || loadingData}
               >
-                {isSubmitting ? "Creating..." : "Create Program"}
+                {isSubmitting
+                  ? isEditMode
+                    ? "Updating..."
+                    : "Creating..."
+                  : isEditMode
+                  ? "Update Program"
+                  : "Create Program"}
               </button>
             </div>
           </form>

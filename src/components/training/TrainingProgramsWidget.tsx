@@ -8,10 +8,12 @@ import TrainingCard from "../dashboard/shared/TrainingCard";
 
 interface TrainingProgramsWidgetProps {
   upcomingOnly?: boolean;
+  refreshTrigger?: number;
 }
 
 export default function TrainingProgramsWidget({
   upcomingOnly = false,
+  refreshTrigger = 0,
 }: TrainingProgramsWidgetProps) {
   const [programs, setPrograms] = useState<ProgramCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,7 +50,7 @@ export default function TrainingProgramsWidget({
     }
 
     fetchPrograms();
-  }, [upcomingOnly]);
+  }, [upcomingOnly, refreshTrigger]);
 
   const handleViewProgram = (programId: string) => {
     // Handle viewing a specific training program

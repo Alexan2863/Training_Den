@@ -136,26 +136,29 @@ export default function UserForm({ onSuccess }: UserFormProps) {
         }`}
       >
         <div className="bg-white border-2 border-ring rounded-2xl w-full max-w-lg shadow-xl relative max-h-[90vh] flex flex-col">
-          {/* Close Button */}
-          <button
-            onClick={handleClose}
-            className="absolute top-4 right-4 text-gray-700 hover:text-black"
-            disabled={isSubmitting}
-          >
-            <XIcon className="cursor-pointer hover:text-secondary" size={24} />
-          </button>
+          {/* Fixed Header with Close Button */}
+          <div className="flex-shrink-0 flex justify-end p-4 border-b border-gray-200">
+            <button
+              onClick={handleClose}
+              className="text-gray-700 hover:text-black"
+              disabled={isSubmitting}
+              type="button"
+            >
+              <XIcon className="cursor-pointer hover:text-secondary" size={24} />
+            </button>
+          </div>
 
           {/* Error Banner */}
           {error && (
-            <div className="mx-8 mt-6 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div className="flex-shrink-0 mx-8 mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
               <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
             {/* Scrollable content */}
-            <div className="overflow-y-auto px-8 pt-10 pb-6">
+            <div className="overflow-y-auto px-8 pt-6 pb-6 flex-1">
               {/* Avatar with role colors */}
               <div className="w-full flex justify-center mb-6">
                 <div
