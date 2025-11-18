@@ -18,6 +18,7 @@ export default function AdminUsersPage() {
     type: NotificationType;
     message: string;
   } | null>(null);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const router = useRouter();
 
   const showNotification = useCallback(
@@ -57,8 +58,12 @@ export default function AdminUsersPage() {
     fetchUsers();
   }, [fetchUsers]);
 
+  const handleView = (userId: string) => {
+    router.push(`/users/${userId}`);
+  };
+
   const handleEdit = (userId: string) => {
-    router.push(`/admin/users/${userId}`);
+    setEditingUserId(userId);
   };
 
   const handleDelete = async (userId: string) => {
@@ -85,7 +90,50 @@ export default function AdminUsersPage() {
   };
 
   if (loading) {
-    return <div className="flex justify-center py-8">Loading...</div>;
+    return (
+      <div className="w-full h-full">
+        <main className="w-full h-full p-6 overflow-y-scroll">
+          <div className="animate-pulse">
+            {/* Header skeleton */}
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-4">
+                <div className="h-9 bg-gray-300 rounded w-48"></div>
+                <div className="h-10 bg-gray-300 rounded w-32"></div>
+              </div>
+            </div>
+
+            {/* Table skeleton */}
+            <div className="bg-white rounded-md shadow overflow-hidden">
+              {/* Table header */}
+              <div className="bg-gray-300 h-12"></div>
+              {/* Table rows */}
+              <div className="divide-y divide-gray-200">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                  <div key={i} className="px-6 py-4 flex items-center gap-4">
+                    {/* Avatar circle */}
+                    <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                    {/* Name and email */}
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-40"></div>
+                      <div className="h-3 bg-gray-200 rounded w-56"></div>
+                    </div>
+                    {/* Role badge */}
+                    <div className="h-6 bg-gray-200 rounded w-20"></div>
+                    {/* Action buttons */}
+                    {isAdmin && (
+                      <div className="flex gap-3">
+                        <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                        <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   return (
@@ -160,10 +208,27 @@ export default function AdminUsersPage() {
 
         <UserTable
           users={users}
+          onView={handleView}
           onEdit={handleEdit}
           onDelete={handleDelete}
           isAdmin={isAdmin}
         />
+
+        {/* Edit User Modal */}
+        {editingUserId && (
+          <UserForm
+            userId={editingUserId}
+            initialOpen={true}
+            onSuccess={() => {
+              setEditingUserId(null);
+              showNotification("success", "User updated successfully");
+              fetchUsers();
+            }}
+            onCancel={() => {
+              setEditingUserId(null);
+            }}
+          />
+        )}
       </main>
     </div>
   );

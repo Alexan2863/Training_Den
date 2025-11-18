@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { UserRole, UserFormData } from "@/lib/types/users";
 import { CaretDownIcon, XIcon } from "@phosphor-icons/react";
 
@@ -14,10 +14,14 @@ const ROLE_COLORS: Record<UserRole, { bg: string; text: string }> = {
 
 interface UserFormProps {
   onSuccess?: () => void;
+  onCancel?: () => void;
+  userId?: string; // If provided, form is in edit mode
+  initialOpen?: boolean; // Auto-open the form (useful for edit modals)
 }
 
-export default function UserForm({ onSuccess }: UserFormProps) {
-  const [open, setOpen] = useState(false);
+export default function UserForm({ onSuccess, onCancel, userId, initialOpen = false }: UserFormProps) {
+  const [open, setOpen] = useState(initialOpen);
+  const isEditMode = !!userId;
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -38,6 +42,38 @@ export default function UserForm({ onSuccess }: UserFormProps) {
 
   const avatarColors = ROLE_COLORS[role];
 
+  // Fetch user data when in edit mode
+  useEffect(() => {
+    async function fetchUserData() {
+      if (!userId) return;
+
+      try {
+        const response = await fetch(`/api/users/${userId}`);
+        const data = await response.json();
+
+        if (data.success && data.data) {
+          const user = data.data;
+          setFirstName(user.first_name || "");
+          setLastName(user.last_name || "");
+          setEmail(user.email || "");
+          setPhone(user.phone || "");
+          setRole(user.role || "employee");
+          setIsActive(user.is_active ?? true);
+          // Don't set password - leave empty for security
+        } else {
+          setError(data.message || "Failed to load user data");
+        }
+      } catch (err) {
+        setError("Failed to fetch user data");
+        console.error("Error fetching user:", err);
+      }
+    }
+
+    if (isEditMode && open) {
+      fetchUserData();
+    }
+  }, [userId, isEditMode, open]);
+
   // Validation
   const validateForm = (): string | null => {
     if (!firstName.trim()) return "First name is required";
@@ -46,9 +82,17 @@ export default function UserForm({ onSuccess }: UserFormProps) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return "Invalid email format";
     }
-    if (!password.trim()) return "Password is required";
-    if (password.length < 6) {
-      return "Password must be at least 6 characters";
+    // Password is only required in create mode
+    if (!isEditMode) {
+      if (!password.trim()) return "Password is required";
+      if (password.length < 6) {
+        return "Password must be at least 6 characters";
+      }
+    } else {
+      // In edit mode, only validate if password is provided
+      if (password && password.length < 6) {
+        return "Password must be at least 6 characters";
+      }
     }
     return null;
   };
@@ -67,6 +111,9 @@ export default function UserForm({ onSuccess }: UserFormProps) {
   const handleClose = () => {
     setOpen(false);
     resetForm();
+    if (onCancel) {
+      onCancel();
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,17 +129,25 @@ export default function UserForm({ onSuccess }: UserFormProps) {
     setIsSubmitting(true);
 
     try {
-      const formData: UserFormData = {
+      const formData: any = {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         email: email.trim(),
         phone: phone.trim() || undefined,
         role,
-        password,
+        is_active: isActive,
       };
 
-      const response = await fetch("/api/users", {
-        method: "POST",
+      // Only include password if it's provided (always in create, optional in edit)
+      if (!isEditMode || password.trim()) {
+        formData.password = password;
+      }
+
+      const url = isEditMode ? `/api/users/${userId}` : "/api/users";
+      const method = isEditMode ? "PATCH" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -102,7 +157,8 @@ export default function UserForm({ onSuccess }: UserFormProps) {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.message || "Failed to create user");
+        const action = isEditMode ? "update" : "create";
+        throw new Error(data.message || `Failed to ${action} user`);
       }
 
       handleClose();
@@ -116,13 +172,15 @@ export default function UserForm({ onSuccess }: UserFormProps) {
 
   return (
     <>
-      {/* Button to open modal */}
-      <button
-        className="px-4 py-2 btn-primary text-white rounded-md"
-        onClick={() => setOpen(true)}
-      >
-        Add User
-      </button>
+      {/* Button to open modal - only show in create mode */}
+      {!isEditMode && (
+        <button
+          className="px-4 py-2 btn-primary text-white rounded-md"
+          onClick={() => setOpen(true)}
+        >
+          Add User
+        </button>
+      )}
 
       {/* Overlay */}
       {open && (
@@ -217,16 +275,17 @@ export default function UserForm({ onSuccess }: UserFormProps) {
               {/* PASSWORD */}
               <div className="mb-4">
                 <label className="block font-semibold mb-1">
-                  Password <span className="text-red-500">*</span>
+                  Password {!isEditMode && <span className="text-red-500">*</span>}
+                  {isEditMode && <span className="text-sm text-gray-500 font-normal">(leave blank to keep current)</span>}
                 </label>
                 <input
                   type="password"
                   className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                  placeholder="Minimum 6 characters"
+                  placeholder={isEditMode ? "Leave blank to keep current password" : "Minimum 6 characters"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isSubmitting}
-                  required
+                  required={!isEditMode}
                 />
               </div>
 
@@ -269,30 +328,32 @@ export default function UserForm({ onSuccess }: UserFormProps) {
                   </div>
                 </div>
 
-                {/* STATUS */}
-                <div className="mb-8">
-                  <label className="block font-semibold mb-1">
-                    Status <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <select
-                      className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:outline-none appearance-none cursor-pointer"
-                      value={isActive ? "active" : "inactive"}
-                      onChange={(e) => setIsActive(e.target.value === "active")}
-                      disabled={isSubmitting}
-                      required
-                    >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <CaretDownIcon
-                        className="w-5 h-5 text-gray-600"
-                        size={20}
-                      />
+                {/* STATUS - Only show in edit mode */}
+                {isEditMode && (
+                  <div className="mb-8">
+                    <label className="block font-semibold mb-1">
+                      Status <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:outline-none appearance-none cursor-pointer"
+                        value={isActive ? "active" : "inactive"}
+                        onChange={(e) => setIsActive(e.target.value === "active")}
+                        disabled={isSubmitting}
+                        required
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <CaretDownIcon
+                          className="w-5 h-5 text-gray-600"
+                          size={20}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 

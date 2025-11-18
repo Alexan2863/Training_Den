@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ProgramDetail } from "@/lib/types/training-programs";
 import TrainingProgramForm from "@/components/forms/TrainingProgramForm";
+import { getCurrentUser } from "@/lib/auth";
 
 export default function TrainingProgramDetailPage() {
   const params = useParams();
@@ -16,6 +17,16 @@ export default function TrainingProgramDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check user role
+  useEffect(() => {
+    async function checkUserRole() {
+      const user = await getCurrentUser();
+      setIsAdmin(user?.role === "admin");
+    }
+    checkUserRole();
+  }, []);
 
   useEffect(() => {
     async function fetchProgram() {
@@ -94,12 +105,14 @@ export default function TrainingProgramDetailPage() {
           >
             ← Back to Training Programs
           </button>
-          <button
-            onClick={() => setShowEditForm(true)}
-            className="btn btn-primary"
-          >
-            Edit Program
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setShowEditForm(true)}
+              className="btn btn-primary"
+            >
+              Edit Program
+            </button>
+          )}
         </div>
         <h1 className="text-3xl font-bold mb-2">{program.title}</h1>
         <div className="flex items-center gap-4 text-sm text-gray-600">
