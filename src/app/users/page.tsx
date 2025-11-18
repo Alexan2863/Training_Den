@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+
 import { UserDisplay } from "@/lib/types/users";
 import { getCurrentUser } from "@/lib/auth";
 import UserTable from "@/components/admin/users/UserTable/UserTable";
+import UserForm from "@/components/forms/UserForm";
 
 type NotificationType = "success" | "error" | null;
 
@@ -74,10 +76,7 @@ export default function AdminUsersPage() {
         showNotification("success", "User deactivated successfully");
         fetchUsers();
       } else {
-        showNotification(
-          "error",
-          data.message || "Failed to deactivate user"
-        );
+        showNotification("error", data.message || "Failed to deactivate user");
       }
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -136,7 +135,11 @@ export default function AdminUsersPage() {
                 className="text-current opacity-60 hover:opacity-100 transition-opacity"
                 aria-label="Dismiss notification"
               >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path
                     fillRule="evenodd"
                     d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -151,14 +154,7 @@ export default function AdminUsersPage() {
         <div className="mb-6">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-3xl font-bold">All Users</h1>
-            {isAdmin && (
-              <button
-                onClick={() => router.push("/admin/users/create")}
-                className="btn-primary"
-              >
-                Add User
-              </button>
-            )}
+            {isAdmin && <UserForm onSuccess={fetchUsers} />}
           </div>
         </div>
 
