@@ -118,19 +118,28 @@ export async function getTrainingProgramCards(
     countMap.set(enrollment.program_id, count + 1);
   });
 
-  // Map to ProgramCard format
-  return programs.map((program) => {
-    const manager = program.manager as any;
-    return {
-      id: program.id.toString(),
-      title: program.title,
-      managerName: manager
-        ? `${manager.first_name} ${manager.last_name}`
-        : "Unknown",
-      deadline: program.deadline,
-      enrollmentCount: countMap.get(program.id) || 0,
-    };
-  });
+  // Map to ProgramCard format and sort by manager name, then by deadline
+  return programs
+    .map((program) => {
+      const manager = program.manager as any;
+      return {
+        id: program.id.toString(),
+        title: program.title,
+        managerName: manager
+          ? `${manager.first_name} ${manager.last_name}`
+          : "Unknown",
+        deadline: program.deadline,
+        enrollmentCount: countMap.get(program.id) || 0,
+      };
+    })
+    .sort((a, b) => {
+      // First sort by manager name
+      const managerComparison = a.managerName.localeCompare(b.managerName);
+      if (managerComparison !== 0) return managerComparison;
+
+      // Then sort by deadline date
+      return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+    });
 }
 
 /**

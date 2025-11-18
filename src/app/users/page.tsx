@@ -1,70 +1,174 @@
 "use client";
 
-export default function UserTable() {
-    return(
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { UserDisplay } from "@/lib/types/users";
+import { getCurrentUser } from "@/lib/auth";
+import UserTable from "@/components/admin/users/UserTable/UserTable";
 
-        
+type NotificationType = "success" | "error" | null;
 
-        <div className="pb-4 block m-6">
+export default function AdminUsersPage() {
+  const [users, setUsers] = useState<UserDisplay[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [notification, setNotification] = useState<{
+    type: NotificationType;
+    message: string;
+  } | null>(null);
+  const router = useRouter();
 
-            <div className="pb-4 flex flex-row justify-between items-center">
-                <h2 className="text-2xl font-bold px-4">All Users</h2>
-                <button className="btn-primary">Add User</button>
+  const showNotification = useCallback(
+    (type: NotificationType, message: string) => {
+      setNotification({ type, message });
+      // Auto-hide after 5 seconds
+      setTimeout(() => setNotification(null), 5000);
+    },
+    []
+  );
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      const response = await fetch("/api/users");
+      const data = await response.json();
+
+      if (data.success) {
+        setUsers(data.data);
+      } else {
+        showNotification("error", data.message || "Failed to fetch users");
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      showNotification("error", "Failed to fetch users. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [showNotification]);
+
+  useEffect(() => {
+    async function checkUserRole() {
+      const user = await getCurrentUser();
+      setIsAdmin(user?.role === "admin");
+    }
+
+    checkUserRole();
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const handleEdit = (userId: string) => {
+    router.push(`/admin/users/${userId}`);
+  };
+
+  const handleDelete = async (userId: string) => {
+    if (!confirm("Are you sure you want to deactivate this user?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        showNotification("success", "User deactivated successfully");
+        fetchUsers();
+      } else {
+        showNotification(
+          "error",
+          data.message || "Failed to deactivate user"
+        );
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      showNotification("error", "Failed to deactivate user. Please try again.");
+    }
+  };
+
+  if (loading) {
+    return <div className="flex justify-center py-8">Loading...</div>;
+  }
+
+  return (
+    <div className="w-full h-full">
+      <main className="w-full h-full p-6 overflow-y-scroll">
+        {/* Notification Banner */}
+        {notification && (
+          <div
+            className={`mb-4 p-4 rounded-md ${
+              notification.type === "success"
+                ? "bg-green-50 text-green-800 border border-green-200"
+                : "bg-red-50 text-red-800 border border-red-200"
+            }`}
+            role="alert"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-3">
+                {notification.type === "success" ? (
+                  <svg
+                    className="w-5 h-5 mt-0.5 flex-shrink-0"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-5 h-5 mt-0.5 flex-shrink-0"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                )}
+                <p className="font-medium">{notification.message}</p>
+              </div>
+              <button
+                onClick={() => setNotification(null)}
+                className="text-current opacity-60 hover:opacity-100 transition-opacity"
+                aria-label="Dismiss notification"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
             </div>
+          </div>
+        )}
 
-            <table className="usertable border rounded-lg">
-                <thead className="usertablehead rounded-lg">
-                    <tr>
-                        <th className="p-4">User</th>
-                        <th className="p-4">Role</th>
-                        <th className="p-4">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr className="border hover:bg-gray-100">
-                        <td className="flex items-center">
-                            <div className="p-4 rounded-full border ml-2">
-                                <p>SM</p>
-                            </div>
-                            <div className="p-4">
-                                <strong>Sarah Mitchell</strong><br></br>
-                                <small>SMitchell@trainingden.com</small>
-                            </div>
-                        </td>
-
-                        <td>
-                            <span className="border rounded-full p-4">Admin</span>
-                        </td>
-
-                        <td className="p-4">
-                            <button><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#000000" viewBox="0 0 256 256"><path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z"></path></svg></button>
-                            <button><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#000000" viewBox="0 0 256 256"><path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"></path></svg></button>
-                        </td>
-                    </tr>
-
-                    <tr className="border hover:bg-gray-100">
-                        <td className="flex items-center">
-                            <div className="p-4 rounded-full border ml-2">
-                                <p>SM</p>
-                            </div>
-
-                            <div className="p-4">
-                                <strong>Sarah Mitchell</strong><br></br>
-                                <small>SMitchell@trainingden.com</small>
-                            </div>
-                        </td>
-
-                        <td>
-                            <span className="border rounded-full p-4">Admin</span>
-                        </td>
-
-                        <td className="p-4">
-                            <button><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#000000" viewBox="0 0 256 256"><path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z"></path></svg></button>
-                            <button><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#000000" viewBox="0 0 256 256"><path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"></path></svg></button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-3xl font-bold">All Users</h1>
+            {isAdmin && (
+              <button
+                onClick={() => router.push("/admin/users/create")}
+                className="btn-primary"
+              >
+                Add User
+              </button>
+            )}
+          </div>
         </div>
-    );
+
+        <UserTable
+          users={users}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          isAdmin={isAdmin}
+        />
+      </main>
+    </div>
+  );
 }
