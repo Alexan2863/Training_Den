@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import DashboardStatsWidget from "../shared/DashboardStatsWidget";
 import TrainingCard from "../shared/TrainingCard";
 import ErrorDisplay from "../shared/ErrorDisplay";
+import TrainingProgramForm from "@/components/TrainingProgramForm";
 import {
   MedalIcon,
   SuitcaseSimpleIcon,
@@ -137,6 +138,10 @@ export default function AdminDashboard() {
           <TrainingCard/>
         </div>
 
+      </div>
+
+      <div>
+        <TrainingProgramForm/>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
-
+import { useState } from "react";
+import UserForm from "@/components/UserForm";
 export default function UserTable() {
     return(
 
@@ -9,7 +10,7 @@ export default function UserTable() {
 
             <div className="pb-4 flex flex-row justify-between items-center">
                 <h2 className="text-2xl font-bold px-4">All Users</h2>
-                <button className="btn-primary">Add User</button>
+                <UserForm/>
             </div>
 
             <table className="usertable border rounded-lg">
