@@ -2,6 +2,7 @@ import { User } from "@/lib/types/users";
 import UserAvatar from "./UserAvatar";
 import RoleBadge from "./RoleBadge";
 import { PencilSimpleIcon, TrashIcon } from "@phosphor-icons/react";
+import { getInitials } from "@/lib/utils/user-helpers";
 
 interface UserTableRowProps {
   user: User;
@@ -17,7 +18,7 @@ export default function UserTableRow({
   isAdmin,
 }: UserTableRowProps) {
   const fullName = `${user.first_name} ${user.last_name}`;
-  const initials = `${user.first_name[0]}${user.last_name[0]}`.toUpperCase();
+  const initials = getInitials(user.first_name, user.last_name);
 
   return (
     <tr className="hover:bg-gray-50">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireRole, isAuthError } from "@/lib/auth/api";
 import { createClient } from "@/lib/supabase/server";
 import { getErrorMessage } from "@/lib/utils/errors";
+import { VALID_ROLES } from "@/lib/types/users";
 
 // GET /api/users/{id} - Get single user (admin only)
 export async function GET(
@@ -62,12 +63,35 @@ export async function PATCH(
     return authResult;
   }
 
+  const { user } = authResult;
   const { id } = await params;
 
   try {
     const supabase = await createClient();
     const body = await request.json();
     const { first_name, last_name, role, phone, is_active } = body;
+
+    // Prevent admin from modifying their own role or deactivating themselves
+    if (id === user.id) {
+      if (role !== undefined && role !== user.role) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Cannot change your own role",
+          },
+          { status: 403 }
+        );
+      }
+      if (is_active === false) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Cannot deactivate your own account",
+          },
+          { status: 403 }
+        );
+      }
+    }
 
     // Build update object (only include provided fields)
     const updates: any = { updated_at: new Date().toISOString() };
@@ -76,7 +100,7 @@ export async function PATCH(
     if (last_name !== undefined) updates.last_name = last_name;
     if (role !== undefined) {
       // Validate role
-      if (!["admin", "manager", "trainer", "employee"].includes(role)) {
+      if (!VALID_ROLES.includes(role)) {
         return NextResponse.json(
           {
             success: false,
@@ -139,7 +163,19 @@ export async function DELETE(
     return authResult;
   }
 
+  const { user } = authResult;
   const { id } = await params;
+
+  // Prevent admin from deactivating their own account
+  if (id === user.id) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: "You cannot deactivate your own account",
+      },
+      { status: 403 }
+    );
+  }
 
   try {
     const supabase = await createClient();

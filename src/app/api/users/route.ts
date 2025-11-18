@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, requireRole, isAuthError } from "@/lib/auth/api";
 import { createClient } from "@/lib/supabase/server";
-import { toUserDisplay } from "@/lib/utils/user-helpers";
+import { toUserDisplay, isValidEmail } from "@/lib/utils/user-helpers";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { VALID_ROLES, ROLE_ORDER } from "@/lib/types/users";
 
@@ -97,6 +97,13 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "Missing required fields",
         },
+        { status: 400 }
+      );
+    }
+
+    if (!isValidEmail(email)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid email format" },
         { status: 400 }
       );
     }
