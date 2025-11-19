@@ -12,7 +12,7 @@ interface HeaderProps {
 
 function Header({ pageTitle, onMenuClick, user }: HeaderProps) {
   return (
-    <header className="bg-primary text-white shadow-md">
+    <header className="bg-primary text-white shadow-md border-b border-primary-light">
       <div className="flex items-center justify-between px-4 py-4 lg:px-6">
         {/* Mobile menu icon */}
         <button

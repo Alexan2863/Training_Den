@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 import { UserDisplay } from "@/lib/types/users";
-import { getCurrentUser } from "@/lib/auth";
+import { useUser } from "@/components/UserProvider";
 import UserTable from "@/components/admin/users/UserTable/UserTable";
 import UserForm from "@/components/forms/UserForm";
 
@@ -13,13 +13,13 @@ type NotificationType = "success" | "error" | null;
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserDisplay[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [notification, setNotification] = useState<{
     type: NotificationType;
     message: string;
   } | null>(null);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const router = useRouter();
+  const user = useUser();
 
   const showNotification = useCallback(
     (type: NotificationType, message: string) => {
@@ -49,12 +49,6 @@ export default function AdminUsersPage() {
   }, [showNotification]);
 
   useEffect(() => {
-    async function checkUserRole() {
-      const user = await getCurrentUser();
-      setIsAdmin(user?.role === "admin");
-    }
-
-    checkUserRole();
     fetchUsers();
   }, [fetchUsers]);
 
@@ -120,7 +114,7 @@ export default function AdminUsersPage() {
                     {/* Role badge */}
                     <div className="h-6 bg-gray-200 rounded w-20"></div>
                     {/* Action buttons */}
-                    {isAdmin && (
+                    {user?.role === "admin" && (
                       <div className="flex gap-3">
                         <div className="w-6 h-6 bg-gray-200 rounded"></div>
                         <div className="w-6 h-6 bg-gray-200 rounded"></div>
@@ -202,7 +196,7 @@ export default function AdminUsersPage() {
         <div className="mb-6">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-3xl font-bold">All Users</h1>
-            {isAdmin && <UserForm onSuccess={fetchUsers} />}
+            {user?.role === "admin" && <UserForm onSuccess={fetchUsers} />}
           </div>
         </div>
 
@@ -211,7 +205,7 @@ export default function AdminUsersPage() {
           onView={handleView}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          isAdmin={isAdmin}
+          isAdmin={user?.role === "admin"}
         />
 
         {/* Edit User Modal */}

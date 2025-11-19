@@ -40,19 +40,19 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
           lg:translate-x-0 lg:static
         `}
       >
-        <div className="flex flex-col h-full p-6">
+        <div className="flex flex-col h-full p-2 border-r border-primary-light">
           <div className="mb-8 flex flex-col items-center">
             <Image
               src="/logo.svg"
               alt="Training Den Logo"
-              width={250}
+              width={150}
               height={60}
               className="mb-4"
             />
-            <h1 className="text-white text-4xl font-regular">Training Den</h1>
+            <h1 className="text-white text-3xl font-regular">Training Den</h1>
           </div>
 
-          <nav className="flex flex-col gap-4">
+          <nav className="flex flex-col gap-4 ml-4">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (

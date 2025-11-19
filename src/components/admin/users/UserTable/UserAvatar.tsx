@@ -16,10 +16,10 @@ export default function UserAvatar({
   };
 
   const roleColors = {
-    admin: "bg-emerald-100 text-emerald-800",
-    manager: "bg-rose-100 text-rose-800",
-    trainer: "bg-fuchsia-100 text-fuchsia-800",
-    employee: "bg-sky-100 text-sky-800",
+    admin: "bg-emerald-100 text-emerald-800 border border-emerald-800",
+    manager: "bg-rose-100 text-rose-800 border border-rose-800",
+    trainer: "bg-fuchsia-100 text-fuchsia-800 border border-fuchsia-800",
+    employee: "bg-sky-100 text-sky-800 border border-sky-800",
   };
 
   return (
