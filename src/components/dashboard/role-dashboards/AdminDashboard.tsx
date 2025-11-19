@@ -5,6 +5,7 @@ import DashboardStatsWidget from "../shared/DashboardStatsWidget";
 import TrainingCard from "../shared/TrainingCard";
 import ErrorDisplay from "../shared/ErrorDisplay";
 import TrainingProgramForm from "@/components/TrainingProgramForm";
+import TrainingProgramDetailModal from "@/components/TrainingProgramDetailModal";
 import {
   MedalIcon,
   SuitcaseSimpleIcon,
@@ -142,6 +143,8 @@ export default function AdminDashboard() {
 
       <div>
         <TrainingProgramForm/>
+
+        <TrainingProgramDetailModal/>
       </div>
     </div>
   );
