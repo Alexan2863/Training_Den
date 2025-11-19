@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import ProfileIcon from "@/components/ProfileIcon";
 import { getCurrentUser } from "@/lib/auth";
 
 interface UserDetail {
