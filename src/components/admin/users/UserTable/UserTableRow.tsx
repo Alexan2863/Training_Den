@@ -6,6 +6,7 @@ import { getInitials } from "@/lib/utils/user-helpers";
 
 interface UserTableRowProps {
   user: User;
+  onView: (userId: string) => void;
   onEdit: (userId: string) => void;
   onDelete: (userId: string) => void;
   isAdmin: boolean;
@@ -13,6 +14,7 @@ interface UserTableRowProps {
 
 export default function UserTableRow({
   user,
+  onView,
   onEdit,
   onDelete,
   isAdmin,
@@ -21,7 +23,10 @@ export default function UserTableRow({
   const initials = getInitials(user.first_name, user.last_name);
 
   return (
-    <tr className="hover:bg-gray-50">
+    <tr
+      className="hover:bg-gray-50 cursor-pointer"
+      onClick={() => onView(user.id)}
+    >
       <td className="px-6 py-4">
         <div className="flex items-center gap-3">
           <UserAvatar initials={initials} role={user.role} />
@@ -41,14 +46,20 @@ export default function UserTableRow({
         <td className="px-6 py-4">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => onEdit(user.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(user.id);
+              }}
               className="text-gray-600 hover:text-blue-600"
               aria-label="Edit user"
             >
               <PencilSimpleIcon size={24} weight="regular" />
             </button>
             <button
-              onClick={() => onDelete(user.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(user.id);
+              }}
               className="text-gray-600 hover:text-red-600"
               aria-label="Delete user"
             >

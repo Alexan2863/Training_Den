@@ -6,25 +6,25 @@ export default function RoleBadge({ role }: RoleBadgeProps) {
   const roleStyles = {
     admin: {
       bg: "bg-emerald-50",
-      border: "border-emerald-300",
+      border: "border-emerald-800",
       text: "text-emerald-800",
       label: "Admin",
     },
     manager: {
       bg: "bg-rose-50",
-      border: "border-rose-300",
+      border: "border-rose-800",
       text: "text-rose-800",
       label: "Manager",
     },
     trainer: {
       bg: "bg-fuchsia-50",
-      border: "border-fuchsia-300",
+      border: "border-fuchsia-800",
       text: "text-fuchsia-800",
       label: "Trainer",
     },
     employee: {
       bg: "bg-sky-50",
-      border: "border-sky-300",
+      border: "border-sky-800",
       text: "text-sky-800",
       label: "Employee",
     },

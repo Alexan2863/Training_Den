@@ -2,21 +2,24 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+
 import { UserDisplay } from "@/lib/types/users";
-import { getCurrentUser } from "@/lib/auth";
+import { useUser } from "@/components/UserProvider";
 import UserTable from "@/components/admin/users/UserTable/UserTable";
+import UserForm from "@/components/forms/UserForm";
 
 type NotificationType = "success" | "error" | null;
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserDisplay[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [notification, setNotification] = useState<{
     type: NotificationType;
     message: string;
   } | null>(null);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const router = useRouter();
+  const user = useUser();
 
   const showNotification = useCallback(
     (type: NotificationType, message: string) => {
@@ -46,17 +49,15 @@ export default function AdminUsersPage() {
   }, [showNotification]);
 
   useEffect(() => {
-    async function checkUserRole() {
-      const user = await getCurrentUser();
-      setIsAdmin(user?.role === "admin");
-    }
-
-    checkUserRole();
     fetchUsers();
   }, [fetchUsers]);
 
+  const handleView = (userId: string) => {
+    router.push(`/users/${userId}`);
+  };
+
   const handleEdit = (userId: string) => {
-    router.push(`/admin/users/${userId}`);
+    setEditingUserId(userId);
   };
 
   const handleDelete = async (userId: string) => {
@@ -74,10 +75,7 @@ export default function AdminUsersPage() {
         showNotification("success", "User deactivated successfully");
         fetchUsers();
       } else {
-        showNotification(
-          "error",
-          data.message || "Failed to deactivate user"
-        );
+        showNotification("error", data.message || "Failed to deactivate user");
       }
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -86,7 +84,50 @@ export default function AdminUsersPage() {
   };
 
   if (loading) {
-    return <div className="flex justify-center py-8">Loading...</div>;
+    return (
+      <div className="w-full h-full">
+        <main className="w-full h-full p-6 overflow-y-scroll">
+          <div className="animate-pulse">
+            {/* Header skeleton */}
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-4">
+                <div className="h-9 bg-gray-300 rounded w-48"></div>
+                <div className="h-10 bg-gray-300 rounded w-32"></div>
+              </div>
+            </div>
+
+            {/* Table skeleton */}
+            <div className="bg-white rounded-md shadow overflow-hidden">
+              {/* Table header */}
+              <div className="bg-gray-300 h-12"></div>
+              {/* Table rows */}
+              <div className="divide-y divide-gray-200">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                  <div key={i} className="px-6 py-4 flex items-center gap-4">
+                    {/* Avatar circle */}
+                    <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                    {/* Name and email */}
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-40"></div>
+                      <div className="h-3 bg-gray-200 rounded w-56"></div>
+                    </div>
+                    {/* Role badge */}
+                    <div className="h-6 bg-gray-200 rounded w-20"></div>
+                    {/* Action buttons */}
+                    {user?.role === "admin" && (
+                      <div className="flex gap-3">
+                        <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                        <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   return (
@@ -136,7 +177,11 @@ export default function AdminUsersPage() {
                 className="text-current opacity-60 hover:opacity-100 transition-opacity"
                 aria-label="Dismiss notification"
               >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path
                     fillRule="evenodd"
                     d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -151,23 +196,33 @@ export default function AdminUsersPage() {
         <div className="mb-6">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-3xl font-bold">All Users</h1>
-            {isAdmin && (
-              <button
-                onClick={() => router.push("/admin/users/create")}
-                className="btn-primary"
-              >
-                Add User
-              </button>
-            )}
+            {user?.role === "admin" && <UserForm onSuccess={fetchUsers} />}
           </div>
         </div>
 
         <UserTable
           users={users}
+          onView={handleView}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          isAdmin={isAdmin}
+          isAdmin={user?.role === "admin"}
         />
+
+        {/* Edit User Modal */}
+        {editingUserId && (
+          <UserForm
+            userId={editingUserId}
+            initialOpen={true}
+            onSuccess={() => {
+              setEditingUserId(null);
+              showNotification("success", "User updated successfully");
+              fetchUsers();
+            }}
+            onCancel={() => {
+              setEditingUserId(null);
+            }}
+          />
+        )}
       </main>
     </div>
   );

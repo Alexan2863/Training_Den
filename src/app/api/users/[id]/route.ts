@@ -1,31 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole, isAuthError } from "@/lib/auth/api";
+import { requireAuth, requireRole, isAuthError } from "@/lib/auth/api";
 import { createClient } from "@/lib/supabase/server";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { VALID_ROLES } from "@/lib/types/users";
 
-// GET /api/users/{id} - Get single user (admin only)
+// GET /api/users/{id} - Get single user (all authenticated users can view basic info, admins see additional data)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authResult = await requireRole(["admin"]);
+  const authResult = await requireAuth();
   if (isAuthError(authResult)) {
     return authResult;
   }
 
+  const { user: requestingUser } = authResult;
   const { id } = await params;
 
   try {
     const supabase = await createClient();
 
-    const { data, error } = await supabase
+    const { data: user, error } = await supabase
       .from("users")
       .select("*")
       .eq("id", id)
       .single();
 
-    if (error || !data) {
+    if (error || !user) {
       return NextResponse.json(
         {
           success: false,
@@ -35,9 +36,73 @@ export async function GET(
       );
     }
 
+    // Fetch role-specific data (only for admins)
+    let roleSpecificData: any = {};
+
+    if (requestingUser.role === "admin") {
+      if (user.role === "manager") {
+        // Get programs managed by this user
+        const { data: programs } = await supabase
+          .from("training_program")
+          .select("id, title, deadline, is_active")
+          .eq("manager_id", id)
+          .eq("is_active", true)
+          .order("deadline", { ascending: true });
+
+        roleSpecificData.managedPrograms = programs || [];
+      } else if (user.role === "trainer") {
+        // Get training sessions taught by this user
+        const { data: sessions } = await supabase
+          .from("training_session")
+          .select(`
+            id,
+            session_datetime,
+            duration_minutes,
+            is_active,
+            program:training_program(id, title)
+          `)
+          .eq("trainer_id", id)
+          .eq("is_active", true)
+          .order("session_datetime", { ascending: true });
+
+        roleSpecificData.trainingSessions = sessions || [];
+      } else if (user.role === "employee") {
+        // Get programs assigned to this employee
+        const { data: assignments } = await supabase
+          .from("program_assignment")
+          .select(`
+            id,
+            created_at,
+            program:training_program(id, title, deadline)
+          `)
+          .eq("employee_id", id);
+
+        // Get sessions enrolled in
+        const { data: enrollments } = await supabase
+          .from("session_enrollment")
+          .select(`
+            id,
+            completed,
+            completion_date,
+            session:training_session(
+              id,
+              session_datetime,
+              program:training_program(id, title)
+            )
+          `)
+          .eq("employee_id", id);
+
+        roleSpecificData.assignedPrograms = assignments || [];
+        roleSpecificData.enrolledSessions = enrollments || [];
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      data,
+      data: {
+        ...user,
+        ...roleSpecificData,
+      },
     });
   } catch (error: unknown) {
     const errorMessage = getErrorMessage(error);
@@ -69,7 +134,7 @@ export async function PATCH(
   try {
     const supabase = await createClient();
     const body = await request.json();
-    const { first_name, last_name, role, phone, is_active } = body;
+    const { first_name, last_name, email, role, phone, is_active, password } = body;
 
     // Prevent admin from modifying their own role or deactivating themselves
     if (id === user.id) {
@@ -98,6 +163,7 @@ export async function PATCH(
 
     if (first_name !== undefined) updates.first_name = first_name;
     if (last_name !== undefined) updates.last_name = last_name;
+    if (email !== undefined) updates.email = email;
     if (role !== undefined) {
       // Validate role
       if (!VALID_ROLES.includes(role)) {
@@ -113,6 +179,11 @@ export async function PATCH(
     }
     if (phone !== undefined) updates.phone = phone;
     if (is_active !== undefined) updates.is_active = is_active;
+
+    // Update password if provided
+    if (password && password.trim()) {
+      updates.password = password; // Supabase auth will hash this automatically
+    }
 
     const { data, error } = await supabase
       .from("users")

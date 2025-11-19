@@ -5,6 +5,7 @@ import UserTableRow from "./UserTableRow";
 
 interface UserTableProps {
   users: User[];
+  onView: (userId: string) => void;
   onEdit: (userId: string) => void;
   onDelete: (userId: string) => void;
   isAdmin: boolean;
@@ -12,6 +13,7 @@ interface UserTableProps {
 
 export default function UserTable({
   users,
+  onView,
   onEdit,
   onDelete,
   isAdmin,
@@ -49,6 +51,7 @@ export default function UserTable({
               <UserTableRow
                 key={user.id}
                 user={user}
+                onView={onView}
                 onEdit={onEdit}
                 onDelete={onDelete}
                 isAdmin={isAdmin}

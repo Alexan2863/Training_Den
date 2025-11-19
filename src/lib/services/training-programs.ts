@@ -343,7 +343,7 @@ export async function getAssignedEmployees(
       assigned_by_manager_id,
       notes,
       created_at,
-      employee:users(
+      employee:employee_id(
         id,
         email,
         first_name,
@@ -449,7 +449,7 @@ export async function getProgramEnrollments(
       completed,
       completion_date,
       notes,
-      employee:users(
+      employee:employee_id(
         id,
         email,
         first_name,
@@ -514,7 +514,7 @@ export async function getEmployeeEnrollments(
       completed,
       completion_date,
       notes,
-      employee:users(
+      employee:employee_id(
         id,
         email,
         first_name,
