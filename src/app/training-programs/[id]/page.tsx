@@ -4,29 +4,23 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ProgramDetail } from "@/lib/types/training-programs";
 import TrainingProgramForm from "@/components/forms/TrainingProgramForm";
-import { getCurrentUser } from "@/lib/auth";
+import TrainerSessionManager from "@/components/training/TrainerSessionManager";
+import ManagerEmployeeAssignment from "@/components/training/ManagerEmployeeAssignment";
+import EmployeeSessionEnrollment from "@/components/training/EmployeeSessionEnrollment";
+import { useUser } from "@/components/UserProvider";
 
 export default function TrainingProgramDetailPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
   const programId = params.id as string;
+  const user = useUser();
 
   const [program, setProgram] = useState<ProgramDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  // Check user role
-  useEffect(() => {
-    async function checkUserRole() {
-      const user = await getCurrentUser();
-      setIsAdmin(user?.role === "admin");
-    }
-    checkUserRole();
-  }, []);
 
   useEffect(() => {
     async function fetchProgram() {
@@ -105,7 +99,7 @@ export default function TrainingProgramDetailPage() {
           >
             ← Back to Training Programs
           </button>
-          {isAdmin && (
+          {user?.role === "admin" && (
             <button
               onClick={() => setShowEditForm(true)}
               className="btn btn-primary"
@@ -235,89 +229,91 @@ export default function TrainingProgramDetailPage() {
         </div>
       )}
 
-      {/* Enrolled Employees (for admin/trainer) */}
-      {"enrolledEmployees" in program && program.enrolledEmployees && (
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-4">Enrolled Employees</h2>
-          <div className="bg-white border rounded-md overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="text-left p-3 text-sm font-semibold">
-                    Employee
-                  </th>
-                  <th className="text-left p-3 text-sm font-semibold">Email</th>
-                  <th className="text-left p-3 text-sm font-semibold">
-                    Session
-                  </th>
-                  <th className="text-left p-3 text-sm font-semibold">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {program.enrolledEmployees.map((enrollment) => (
-                  <tr key={enrollment.id} className="border-b last:border-b-0">
-                    <td className="p-3">{enrollment.employee.fullName}</td>
-                    <td className="p-3 text-sm text-gray-600">
-                      {enrollment.employee.email}
-                    </td>
-                    <td className="p-3 text-sm">
-                      Session {enrollment.session_id}
-                    </td>
-                    <td className="p-3">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          enrollment.completed
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {enrollment.completed ? "Completed" : "Pending"}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+      {/* Trainer Session Management (for trainers) */}
+      {user?.role === "trainer" &&
+        "sessions" in program &&
+        "enrolledEmployees" in program && (
+          <TrainerSessionManager
+            program={program as any}
+            onUpdate={() => setRefreshTrigger((prev) => prev + 1)}
+          />
+        )}
 
-      {/* Assigned Employees (for managers) */}
-      {"assignedEmployees" in program && program.assignedEmployees && (
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-4">Assigned Employees</h2>
-          <div className="bg-white border rounded-md overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="text-left p-3 text-sm font-semibold">
-                    Employee
-                  </th>
-                  <th className="text-left p-3 text-sm font-semibold">Email</th>
-                  <th className="text-left p-3 text-sm font-semibold">
-                    Assigned Date
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {program.assignedEmployees.map((assignment) => (
-                  <tr key={assignment.id} className="border-b last:border-b-0">
-                    <td className="p-3">{assignment.employee.fullName}</td>
-                    <td className="p-3 text-sm text-gray-600">
-                      {assignment.employee.email}
-                    </td>
-                    <td className="p-3 text-sm">
-                      {new Date(assignment.created_at).toLocaleDateString()}
-                    </td>
+      {/* Enrolled Employees (for admin - read-only view) */}
+      {user?.role === "admin" &&
+        "enrolledEmployees" in program &&
+        program.enrolledEmployees && (
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold mb-4">Enrolled Employees</h2>
+            <div className="bg-white border rounded-md overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-primary text-white border-b">
+                  <tr>
+                    <th className="text-left p-3 text-sm font-semibold">
+                      Employee
+                    </th>
+                    <th className="text-left p-3 text-sm font-semibold">
+                      Email
+                    </th>
+                    <th className="text-left p-3 text-sm font-semibold">
+                      Session
+                    </th>
+                    <th className="text-left p-3 text-sm font-semibold">
+                      Status
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {program.enrolledEmployees.map((enrollment) => (
+                    <tr
+                      key={enrollment.id}
+                      className="border-b last:border-b-0"
+                    >
+                      <td className="p-3">{enrollment.employee.fullName}</td>
+                      <td className="p-3 text-sm text-gray-600">
+                        {enrollment.employee.email}
+                      </td>
+                      <td className="p-3 text-sm">
+                        Session {enrollment.session_id}
+                      </td>
+                      <td className="p-3">
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-medium ${
+                            enrollment.completed
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {enrollment.completed ? "Completed" : "Pending"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+      {/* Manager Employee Assignment (for managers) */}
+      {user?.role === "manager" &&
+        "assignedEmployees" in program &&
+        "availableEmployees" in program && (
+          <ManagerEmployeeAssignment
+            program={program as any}
+            onUpdate={() => setRefreshTrigger((prev) => prev + 1)}
+          />
+        )}
+
+      {/* Employee Session Enrollment (for employees) */}
+      {user?.role === "employee" &&
+        "sessions" in program &&
+        "myEnrollments" in program && (
+          <EmployeeSessionEnrollment
+            program={program as any}
+            onUpdate={() => setRefreshTrigger((prev) => prev + 1)}
+          />
+        )}
 
       {/* Edit Form Modal */}
       {showEditForm && (
