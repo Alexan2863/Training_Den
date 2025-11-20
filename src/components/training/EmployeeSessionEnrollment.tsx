@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { EmployeeProgramDetail, SessionEnrollmentInfo } from "@/lib/types/training-programs";
 import {
   CheckCircleIcon,
@@ -20,6 +20,14 @@ export default function EmployeeSessionEnrollment({
 }: EmployeeSessionEnrollmentProps) {
   const [updatingSessions, setUpdatingSessions] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   // Find enrollment for a given session
   const getEnrollmentForSession = (sessionId: string): SessionEnrollmentInfo | undefined => {
@@ -28,7 +36,10 @@ export default function EmployeeSessionEnrollment({
 
   const enrollInSession = async (sessionId: string) => {
     setError(null);
-    setUpdatingSessions(new Set(updatingSessions).add(sessionId));
+    setUpdatingSessions(prev => new Set(prev).add(sessionId));
+
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
 
     try {
       const response = await fetch(`/api/sessions/${sessionId}/enroll`, {
@@ -37,22 +48,32 @@ export default function EmployeeSessionEnrollment({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({}),
+        signal: abortControllerRef.current.signal,
       });
 
-      const data = await response.json();
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(data.message || "Failed to enroll in session");
+      }
 
-      if (!response.ok || !data.success) {
+      const data = await response.json();
+      if (!data.success) {
         throw new Error(data.message || "Failed to enroll in session");
       }
 
       // Success - trigger refresh
       onUpdate?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to enroll in session");
+      // Don't set error if request was aborted (component unmounted)
+      if (err instanceof Error && err.name !== 'AbortError') {
+        setError(err.message || "Failed to enroll in session");
+      }
     } finally {
-      const newUpdating = new Set(updatingSessions);
-      newUpdating.delete(sessionId);
-      setUpdatingSessions(newUpdating);
+      setUpdatingSessions(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(sessionId);
+        return newSet;
+      });
     }
   };
 
@@ -62,27 +83,40 @@ export default function EmployeeSessionEnrollment({
     }
 
     setError(null);
-    setUpdatingSessions(new Set(updatingSessions).add(sessionId));
+    setUpdatingSessions(prev => new Set(prev).add(sessionId));
+
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
 
     try {
       const response = await fetch(`/api/sessions/${sessionId}/enroll`, {
         method: "DELETE",
+        signal: abortControllerRef.current.signal,
       });
 
-      const data = await response.json();
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(data.message || "Failed to unenroll from session");
+      }
 
-      if (!response.ok || !data.success) {
+      const data = await response.json();
+      if (!data.success) {
         throw new Error(data.message || "Failed to unenroll from session");
       }
 
       // Success - trigger refresh
       onUpdate?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to unenroll from session");
+      // Don't set error if request was aborted (component unmounted)
+      if (err instanceof Error && err.name !== 'AbortError') {
+        setError(err.message || "Failed to unenroll from session");
+      }
     } finally {
-      const newUpdating = new Set(updatingSessions);
-      newUpdating.delete(sessionId);
-      setUpdatingSessions(newUpdating);
+      setUpdatingSessions(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(sessionId);
+        return newSet;
+      });
     }
   };
 
@@ -100,10 +134,12 @@ export default function EmployeeSessionEnrollment({
     }
   };
 
-  // Sort sessions by date (upcoming first)
-  const sortedSessions = [...program.sessions].sort((a, b) => {
-    return new Date(a.session_datetime).getTime() - new Date(b.session_datetime).getTime();
-  });
+  // Sort sessions by date (upcoming first) - memoized to avoid recalculation
+  const sortedSessions = useMemo(() => {
+    return [...program.sessions].sort((a, b) => {
+      return new Date(a.session_datetime).getTime() - new Date(b.session_datetime).getTime();
+    });
+  }, [program.sessions]);
 
   if (sortedSessions.length === 0) {
     return (
@@ -121,7 +157,7 @@ export default function EmployeeSessionEnrollment({
       <h2 className="text-2xl font-bold mb-4">Session Enrollments</h2>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md" role="alert">
           <p className="text-red-800 text-sm">{error}</p>
           <button
             onClick={() => setError(null)}
@@ -170,6 +206,8 @@ export default function EmployeeSessionEnrollment({
                     <button
                       onClick={() => handleToggle(session.id, enrollment)}
                       disabled={isUpdating}
+                      aria-busy={isUpdating}
+                      aria-label={isEnrolled ? "Unenroll from session" : "Enroll in session"}
                       className="hover:opacity-70 transition-opacity"
                     >
                       {isEnrolled ? (
