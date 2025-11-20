@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import {
   TrainerProgramDetail,
-  ProgramSession,
   SessionEnrollmentInfo,
 } from "@/lib/types/training-programs";
 import {

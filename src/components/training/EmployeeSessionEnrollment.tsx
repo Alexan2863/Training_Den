@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import { EmployeeProgramDetail, SessionEnrollmentInfo } from "@/lib/types/training-programs";
+import {
+  EmployeeProgramDetail,
+  SessionEnrollmentInfo,
+} from "@/lib/types/training-programs";
 import {
   CheckCircleIcon,
   SpinnerGapIcon,
@@ -18,7 +21,9 @@ export default function EmployeeSessionEnrollment({
   program,
   onUpdate,
 }: EmployeeSessionEnrollmentProps) {
-  const [updatingSessions, setUpdatingSessions] = useState<Set<string>>(new Set());
+  const [updatingSessions, setUpdatingSessions] = useState<Set<string>>(
+    new Set()
+  );
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -30,13 +35,17 @@ export default function EmployeeSessionEnrollment({
   }, []);
 
   // Find enrollment for a given session
-  const getEnrollmentForSession = (sessionId: string): SessionEnrollmentInfo | undefined => {
-    return program.myEnrollments.find((enrollment) => enrollment.session_id === sessionId);
+  const getEnrollmentForSession = (
+    sessionId: string
+  ): SessionEnrollmentInfo | undefined => {
+    return program.myEnrollments.find(
+      (enrollment) => enrollment.session_id === sessionId
+    );
   };
 
   const enrollInSession = async (sessionId: string) => {
     setError(null);
-    setUpdatingSessions(prev => new Set(prev).add(sessionId));
+    setUpdatingSessions((prev) => new Set(prev).add(sessionId));
 
     // Create new AbortController for this request
     abortControllerRef.current = new AbortController();
@@ -52,7 +61,9 @@ export default function EmployeeSessionEnrollment({
       });
 
       if (!response.ok) {
-        const data = await response.json().catch(() => ({ message: 'Request failed' }));
+        const data = await response
+          .json()
+          .catch(() => ({ message: "Request failed" }));
         throw new Error(data.message || "Failed to enroll in session");
       }
 
@@ -65,11 +76,11 @@ export default function EmployeeSessionEnrollment({
       onUpdate?.();
     } catch (err) {
       // Don't set error if request was aborted (component unmounted)
-      if (err instanceof Error && err.name !== 'AbortError') {
+      if (err instanceof Error && err.name !== "AbortError") {
         setError(err.message || "Failed to enroll in session");
       }
     } finally {
-      setUpdatingSessions(prev => {
+      setUpdatingSessions((prev) => {
         const newSet = new Set(prev);
         newSet.delete(sessionId);
         return newSet;
@@ -83,7 +94,7 @@ export default function EmployeeSessionEnrollment({
     }
 
     setError(null);
-    setUpdatingSessions(prev => new Set(prev).add(sessionId));
+    setUpdatingSessions((prev) => new Set(prev).add(sessionId));
 
     // Create new AbortController for this request
     abortControllerRef.current = new AbortController();
@@ -95,7 +106,9 @@ export default function EmployeeSessionEnrollment({
       });
 
       if (!response.ok) {
-        const data = await response.json().catch(() => ({ message: 'Request failed' }));
+        const data = await response
+          .json()
+          .catch(() => ({ message: "Request failed" }));
         throw new Error(data.message || "Failed to unenroll from session");
       }
 
@@ -108,11 +121,11 @@ export default function EmployeeSessionEnrollment({
       onUpdate?.();
     } catch (err) {
       // Don't set error if request was aborted (component unmounted)
-      if (err instanceof Error && err.name !== 'AbortError') {
+      if (err instanceof Error && err.name !== "AbortError") {
         setError(err.message || "Failed to unenroll from session");
       }
     } finally {
-      setUpdatingSessions(prev => {
+      setUpdatingSessions((prev) => {
         const newSet = new Set(prev);
         newSet.delete(sessionId);
         return newSet;
@@ -120,7 +133,10 @@ export default function EmployeeSessionEnrollment({
     }
   };
 
-  const handleToggle = (sessionId: string, enrollment: SessionEnrollmentInfo | undefined) => {
+  const handleToggle = (
+    sessionId: string,
+    enrollment: SessionEnrollmentInfo | undefined
+  ) => {
     if (enrollment) {
       // Already enrolled - try to unenroll
       if (enrollment.completed) {
@@ -137,7 +153,10 @@ export default function EmployeeSessionEnrollment({
   // Sort sessions by date (upcoming first) - memoized to avoid recalculation
   const sortedSessions = useMemo(() => {
     return [...program.sessions].sort((a, b) => {
-      return new Date(a.session_datetime).getTime() - new Date(b.session_datetime).getTime();
+      return (
+        new Date(a.session_datetime).getTime() -
+        new Date(b.session_datetime).getTime()
+      );
     });
   }, [program.sessions]);
 
@@ -146,7 +165,9 @@ export default function EmployeeSessionEnrollment({
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-4">Session Enrollments</h2>
         <div className="bg-gray-50 border border-gray-200 rounded-md p-8 text-center">
-          <p className="text-gray-600">No sessions available for this program yet.</p>
+          <p className="text-gray-600">
+            No sessions available for this program yet.
+          </p>
         </div>
       </div>
     );
@@ -157,7 +178,10 @@ export default function EmployeeSessionEnrollment({
       <h2 className="text-2xl font-bold mb-4">Session Enrollments</h2>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md" role="alert">
+        <div
+          className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md"
+          role="alert"
+        >
           <p className="text-red-800 text-sm">{error}</p>
           <button
             onClick={() => setError(null)}
@@ -182,7 +206,7 @@ export default function EmployeeSessionEnrollment({
               key={session.id}
               className={`border rounded-md p-4 ${
                 isPast && !isCompleted
-                  ? "bg-yellow-50 border-yellow-200"
+                  ? "bg-orange-50 border-secondary-light"
                   : "bg-white border-gray-200"
               }`}
             >
@@ -190,7 +214,10 @@ export default function EmployeeSessionEnrollment({
                 {/* Checkbox/Toggle */}
                 <div className="pt-1">
                   {isUpdating ? (
-                    <SpinnerGapIcon size={24} className="text-blue-600 animate-spin" />
+                    <SpinnerGapIcon
+                      size={24}
+                      className="text-primary animate-spin"
+                    />
                   ) : isCompleted ? (
                     <div
                       className="cursor-not-allowed"
@@ -199,7 +226,7 @@ export default function EmployeeSessionEnrollment({
                       <CheckSquareIcon
                         size={24}
                         weight="fill"
-                        className="text-green-600"
+                        className="text-primary-light"
                       />
                     </div>
                   ) : (
@@ -207,17 +234,25 @@ export default function EmployeeSessionEnrollment({
                       onClick={() => handleToggle(session.id, enrollment)}
                       disabled={isUpdating}
                       aria-busy={isUpdating}
-                      aria-label={isEnrolled ? "Unenroll from session" : "Enroll in session"}
+                      aria-label={
+                        isEnrolled
+                          ? "Unenroll from session"
+                          : "Enroll in session"
+                      }
                       className="hover:opacity-70 transition-opacity"
                     >
                       {isEnrolled ? (
                         <CheckSquareIcon
                           size={24}
                           weight="fill"
-                          className="text-blue-600"
+                          className="text-primary"
                         />
                       ) : (
-                        <SquareIcon size={24} weight="regular" className="text-gray-400" />
+                        <SquareIcon
+                          size={24}
+                          weight="regular"
+                          className="text-gray-400"
+                        />
                       )}
                     </button>
                   )}
@@ -240,12 +275,16 @@ export default function EmployeeSessionEnrollment({
                         })}
                       </h3>
                       <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
-                        <span>Trainer: {session.trainerName || "Not assigned"}</span>
+                        <span>
+                          Trainer: {session.trainerName || "Not assigned"}
+                        </span>
                         <span>•</span>
                         <span>{session.duration_minutes} minutes</span>
                       </div>
                       {session.notes && (
-                        <p className="mt-2 text-sm text-gray-700">{session.notes}</p>
+                        <p className="mt-2 text-sm text-gray-700">
+                          {session.notes}
+                        </p>
                       )}
                     </div>
 
@@ -255,18 +294,20 @@ export default function EmployeeSessionEnrollment({
                         <div>
                           {isCompleted ? (
                             <div className="text-right">
-                              <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded">
+                              <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-lg">
                                 <CheckCircleIcon size={16} weight="fill" />
                                 Completed
                               </span>
                               {enrollment.completion_date && (
                                 <p className="text-xs text-gray-500 mt-1">
-                                  {new Date(enrollment.completion_date).toLocaleDateString()}
+                                  {new Date(
+                                    enrollment.completion_date
+                                  ).toLocaleDateString()}
                                 </p>
                               )}
                             </div>
                           ) : (
-                            <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded">
+                            <span className="inline-flex items-center px-3 py-1 bg-primary text-white text-sm font-medium rounded-lg">
                               Enrolled
                             </span>
                           )}
