@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ManagerProgramDetail } from "@/lib/types/training-programs";
 import {
   CaretDownIcon,
@@ -27,20 +27,33 @@ export default function ManagerEmployeeAssignment({
   );
   const [bulkOperating, setBulkOperating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   const toggleSection = (section: string) => {
-    const newExpanded = new Set(expandedSections);
-    if (newExpanded.has(section)) {
-      newExpanded.delete(section);
-    } else {
-      newExpanded.add(section);
-    }
-    setExpandedSections(newExpanded);
+    setExpandedSections(prev => {
+      const newExpanded = new Set(prev);
+      if (newExpanded.has(section)) {
+        newExpanded.delete(section);
+      } else {
+        newExpanded.add(section);
+      }
+      return newExpanded;
+    });
   };
 
   const assignEmployee = async (employeeId: string) => {
     setError(null);
-    setUpdatingEmployees(new Set(updatingEmployees).add(employeeId));
+    setUpdatingEmployees(prev => new Set(prev).add(employeeId));
+
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
 
     try {
       const response = await fetch(`/api/programs/${program.id}/assign`, {
@@ -51,22 +64,32 @@ export default function ManagerEmployeeAssignment({
         body: JSON.stringify({
           employeeId,
         }),
+        signal: abortControllerRef.current.signal,
       });
 
-      const data = await response.json();
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(data.message || "Failed to assign employee");
+      }
 
-      if (!response.ok || !data.success) {
+      const data = await response.json();
+      if (!data.success) {
         throw new Error(data.message || "Failed to assign employee");
       }
 
       // Success - trigger refresh
       onUpdate?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to assign employee");
+      // Don't set error if request was aborted (component unmounted)
+      if (err instanceof Error && err.name !== 'AbortError') {
+        setError(err.message || "Failed to assign employee");
+      }
     } finally {
-      const newUpdating = new Set(updatingEmployees);
-      newUpdating.delete(employeeId);
-      setUpdatingEmployees(newUpdating);
+      setUpdatingEmployees(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(employeeId);
+        return newSet;
+      });
     }
   };
 
@@ -80,32 +103,43 @@ export default function ManagerEmployeeAssignment({
     }
 
     setError(null);
-    setUpdatingEmployees(new Set(updatingEmployees).add(employeeId));
+    setUpdatingEmployees(prev => new Set(prev).add(employeeId));
+
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
 
     try {
       const response = await fetch(
         `/api/programs/${program.id}/assign/${employeeId}`,
         {
           method: "DELETE",
+          signal: abortControllerRef.current.signal,
         }
       );
 
-      const data = await response.json();
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(data.message || "Failed to remove employee");
+      }
 
-      if (!response.ok || !data.success) {
+      const data = await response.json();
+      if (!data.success) {
         throw new Error(data.message || "Failed to remove employee");
       }
 
       // Success - trigger refresh
       onUpdate?.();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to remove employee"
-      );
+      // Don't set error if request was aborted (component unmounted)
+      if (err instanceof Error && err.name !== 'AbortError') {
+        setError(err.message || "Failed to remove employee");
+      }
     } finally {
-      const newUpdating = new Set(updatingEmployees);
-      newUpdating.delete(employeeId);
-      setUpdatingEmployees(newUpdating);
+      setUpdatingEmployees(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(employeeId);
+        return newSet;
+      });
     }
   };
 
@@ -125,6 +159,9 @@ export default function ManagerEmployeeAssignment({
     setError(null);
     setBulkOperating(true);
 
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
+
     try {
       const response = await fetch(`/api/programs/${program.id}/assign-all`, {
         method: "POST",
@@ -132,20 +169,26 @@ export default function ManagerEmployeeAssignment({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({}),
+        signal: abortControllerRef.current.signal,
       });
 
-      const data = await response.json();
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(data.message || "Failed to assign all employees");
+      }
 
-      if (!response.ok || !data.success) {
+      const data = await response.json();
+      if (!data.success) {
         throw new Error(data.message || "Failed to assign all employees");
       }
 
       // Success - trigger refresh
       onUpdate?.();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to assign employees"
-      );
+      // Don't set error if request was aborted (component unmounted)
+      if (err instanceof Error && err.name !== 'AbortError') {
+        setError(err.message || "Failed to assign employees");
+      }
     } finally {
       setBulkOperating(false);
     }
@@ -167,23 +210,32 @@ export default function ManagerEmployeeAssignment({
     setError(null);
     setBulkOperating(true);
 
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
+
     try {
       const response = await fetch(`/api/programs/${program.id}/assign`, {
         method: "DELETE",
+        signal: abortControllerRef.current.signal,
       });
 
-      const data = await response.json();
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(data.message || "Failed to remove all employees");
+      }
 
-      if (!response.ok || !data.success) {
+      const data = await response.json();
+      if (!data.success) {
         throw new Error(data.message || "Failed to remove all employees");
       }
 
       // Success - trigger refresh
       onUpdate?.();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to remove employees"
-      );
+      // Don't set error if request was aborted (component unmounted)
+      if (err instanceof Error && err.name !== 'AbortError') {
+        setError(err.message || "Failed to remove employees");
+      }
     } finally {
       setBulkOperating(false);
     }
@@ -199,7 +251,7 @@ export default function ManagerEmployeeAssignment({
       <h2 className="text-2xl font-bold mb-4">Employee Assignments</h2>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md" role="alert">
           <p className="text-red-800 text-sm">{error}</p>
           <button
             onClick={() => setError(null)}
@@ -218,6 +270,16 @@ export default function ManagerEmployeeAssignment({
               isAssignedExpanded ? "bg-gray-50" : ""
             }`}
             onClick={() => toggleSection("assigned")}
+            role="button"
+            aria-expanded={isAssignedExpanded}
+            aria-controls="assigned-employees-content"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleSection("assigned");
+              }
+            }}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 flex-1">
@@ -245,6 +307,7 @@ export default function ManagerEmployeeAssignment({
                     removeAll();
                   }}
                   disabled={bulkOperating}
+                  aria-busy={bulkOperating}
                   className="btn btn-secondary flex items-center gap-2"
                 >
                   {bulkOperating ? (
@@ -264,7 +327,7 @@ export default function ManagerEmployeeAssignment({
           </div>
 
           {isAssignedExpanded && (
-            <div className="border-t border-gray-200">
+            <div className="border-t border-gray-200" id="assigned-employees-content">
               {assignedCount === 0 ? (
                 <div className="p-6 text-center text-gray-500">
                   <p>No employees assigned yet. Assign employees below.</p>
@@ -306,6 +369,7 @@ export default function ManagerEmployeeAssignment({
                             )
                           }
                           disabled={isUpdating}
+                          aria-busy={isUpdating}
                           className="btn btn-secondary flex items-center gap-2"
                         >
                           {isUpdating ? (
@@ -339,6 +403,16 @@ export default function ManagerEmployeeAssignment({
               isAvailableExpanded ? "bg-gray-50" : ""
             }`}
             onClick={() => toggleSection("available")}
+            role="button"
+            aria-expanded={isAvailableExpanded}
+            aria-controls="available-employees-content"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleSection("available");
+              }
+            }}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 flex-1">
@@ -366,6 +440,7 @@ export default function ManagerEmployeeAssignment({
                     assignAll();
                   }}
                   disabled={bulkOperating}
+                  aria-busy={bulkOperating}
                   className="btn btn-primary flex items-center gap-2"
                 >
                   {bulkOperating ? (
@@ -385,7 +460,7 @@ export default function ManagerEmployeeAssignment({
           </div>
 
           {isAvailableExpanded && (
-            <div className="border-t border-gray-200">
+            <div className="border-t border-gray-200" id="available-employees-content">
               {availableCount === 0 ? (
                 <div className="p-6 text-center text-gray-500">
                   <p>All employees have been assigned to this program.</p>
@@ -418,6 +493,7 @@ export default function ManagerEmployeeAssignment({
                         <button
                           onClick={() => assignEmployee(employee.id)}
                           disabled={isUpdating}
+                          aria-busy={isUpdating}
                           className="btn btn-primary flex items-center gap-2"
                         >
                           {isUpdating ? (

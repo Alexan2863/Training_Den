@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   TrainerProgramDetail,
   ProgramSession,
@@ -33,11 +33,19 @@ export default function TrainerSessionManager({
     new Set()
   );
   const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Filter to only sessions owned by the trainer
-  const trainerSessions = program.sessions.filter(
-    (session) => session.isOwner === true
-  );
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
+  // Filter to only sessions owned by the trainer - memoized
+  const trainerSessions = useMemo(() => {
+    return program.sessions.filter((session) => session.isOwner === true);
+  }, [program.sessions]);
 
   // Group enrollments by session
   const getEnrollmentsForSession = (
@@ -49,18 +57,23 @@ export default function TrainerSessionManager({
   };
 
   const toggleSession = (sessionId: string) => {
-    const newExpanded = new Set(expandedSessions);
-    if (newExpanded.has(sessionId)) {
-      newExpanded.delete(sessionId);
-    } else {
-      newExpanded.add(sessionId);
-    }
-    setExpandedSessions(newExpanded);
+    setExpandedSessions(prev => {
+      const newExpanded = new Set(prev);
+      if (newExpanded.has(sessionId)) {
+        newExpanded.delete(sessionId);
+      } else {
+        newExpanded.add(sessionId);
+      }
+      return newExpanded;
+    });
   };
 
   const markEnrollmentComplete = async (enrollmentId: string) => {
     setError(null);
-    setUpdatingEnrollments(new Set(updatingEnrollments).add(enrollmentId));
+    setUpdatingEnrollments(prev => new Set(prev).add(enrollmentId));
+
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
 
     try {
       const response = await fetch(`/api/enrollments/${enrollmentId}`, {
@@ -71,24 +84,32 @@ export default function TrainerSessionManager({
         body: JSON.stringify({
           completed: true,
         }),
+        signal: abortControllerRef.current.signal,
       });
 
-      const data = await response.json();
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(data.message || "Failed to mark enrollment complete");
+      }
 
-      if (!response.ok || !data.success) {
+      const data = await response.json();
+      if (!data.success) {
         throw new Error(data.message || "Failed to mark enrollment complete");
       }
 
       // Success - trigger refresh
       onUpdate?.();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to update enrollment"
-      );
+      // Don't set error if request was aborted (component unmounted)
+      if (err instanceof Error && err.name !== 'AbortError') {
+        setError(err.message || "Failed to update enrollment");
+      }
     } finally {
-      const newUpdating = new Set(updatingEnrollments);
-      newUpdating.delete(enrollmentId);
-      setUpdatingEnrollments(newUpdating);
+      setUpdatingEnrollments(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(enrollmentId);
+        return newSet;
+      });
     }
   };
 
@@ -109,7 +130,10 @@ export default function TrainerSessionManager({
     }
 
     setError(null);
-    setUpdatingSessions(new Set(updatingSessions).add(sessionId));
+    setUpdatingSessions(prev => new Set(prev).add(sessionId));
+
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
 
     try {
       const response = await fetch(`/api/sessions/${sessionId}/complete-all`, {
@@ -118,26 +142,32 @@ export default function TrainerSessionManager({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({}),
+        signal: abortControllerRef.current.signal,
       });
 
-      const data = await response.json();
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(data.message || "Failed to mark all enrollments complete");
+      }
 
-      if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Failed to mark all enrollments complete"
-        );
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || "Failed to mark all enrollments complete");
       }
 
       // Success - trigger refresh
       onUpdate?.();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to update enrollments"
-      );
+      // Don't set error if request was aborted (component unmounted)
+      if (err instanceof Error && err.name !== 'AbortError') {
+        setError(err.message || "Failed to update enrollments");
+      }
     } finally {
-      const newUpdating = new Set(updatingSessions);
-      newUpdating.delete(sessionId);
-      setUpdatingSessions(newUpdating);
+      setUpdatingSessions(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(sessionId);
+        return newSet;
+      });
     }
   };
 
@@ -159,7 +189,7 @@ export default function TrainerSessionManager({
       <h2 className="text-2xl font-bold mb-4">Your Sessions</h2>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md" role="alert">
           <p className="text-red-800 text-sm">{error}</p>
           <button
             onClick={() => setError(null)}
@@ -198,6 +228,16 @@ export default function TrainerSessionManager({
                   isExpanded ? "bg-gray-50" : ""
                 }`}
                 onClick={() => toggleSession(session.id)}
+                role="button"
+                aria-expanded={isExpanded}
+                aria-controls={`session-${session.id}-content`}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleSession(session.id);
+                  }
+                }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 flex-1">
@@ -244,6 +284,7 @@ export default function TrainerSessionManager({
                         markAllComplete(session.id);
                       }}
                       disabled={isUpdating}
+                      aria-busy={isUpdating}
                       className="btn btn-primary flex items-center gap-2"
                     >
                       {isUpdating ? (
@@ -261,7 +302,7 @@ export default function TrainerSessionManager({
 
               {/* Session Body - Enrollments */}
               {isExpanded && (
-                <div className="border-t border-gray-200 bg-white">
+                <div className="border-t border-gray-200 bg-white" id={`session-${session.id}-content`}>
                   {totalCount === 0 ? (
                     <div className="p-6 text-center text-gray-500">
                       <p>No employees enrolled in this session yet.</p>
@@ -326,6 +367,7 @@ export default function TrainerSessionManager({
                                     markEnrollmentComplete(enrollment.id)
                                   }
                                   disabled={isUpdatingThis}
+                                  aria-busy={isUpdatingThis}
                                   className="btn btn-secondary flex items-center gap-2"
                                 >
                                   {isUpdatingThis ? (
