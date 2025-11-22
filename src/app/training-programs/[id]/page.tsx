@@ -8,6 +8,7 @@ import TrainerSessionManager from "@/components/training/TrainerSessionManager";
 import ManagerEmployeeAssignment from "@/components/training/ManagerEmployeeAssignment";
 import EmployeeSessionEnrollment from "@/components/training/EmployeeSessionEnrollment";
 import { useUser } from "@/components/UserProvider";
+import ProfileIcon from "@/components/ProfileIcon";
 
 export default function TrainingProgramDetailPage() {
   const params = useParams();
@@ -269,7 +270,12 @@ export default function TrainingProgramDetailPage() {
                       key={enrollment.id}
                       className="border-b last:border-b-0"
                     >
-                      <td className="p-3">{enrollment.employee.fullName}</td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          <ProfileIcon user={user} size="md" />
+                          {enrollment.employee.fullName}
+                        </div>
+                      </td>
                       <td className="p-3 text-sm text-gray-600">
                         {enrollment.employee.email}
                       </td>
