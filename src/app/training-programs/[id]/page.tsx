@@ -272,7 +272,16 @@ export default function TrainingProgramDetailPage() {
                     >
                       <td className="p-3">
                         <div className="flex items-center gap-2">
-                          <ProfileIcon user={user} size="md" />
+                          <ProfileIcon
+                            user={{
+                              id: enrollment.employee.id,
+                              email: enrollment.employee.email,
+                              first_name: enrollment.employee.first_name,
+                              last_name: enrollment.employee.last_name,
+                              role: "employee",
+                            }}
+                            size="md"
+                          />
                           {enrollment.employee.fullName}
                         </div>
                       </td>
