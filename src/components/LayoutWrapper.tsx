@@ -57,7 +57,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
         />
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto bg-background">{children}</main>
+        <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>
   );

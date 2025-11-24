@@ -205,3 +205,75 @@ export async function getEmployeeDashboardStats(userId: string) {
     available: availableCount,
   };
 }
+
+/**
+ * Get upcoming enrolled sessions for an employee
+ * Returns sessions the employee is enrolled in that haven't occurred yet
+ * @param userId - The employee's user ID
+ * @param limit - Maximum number of sessions to return (default 5)
+ * @returns Array of upcoming session details with program info
+ */
+export async function getUpcomingEnrolledSessions(
+  userId: string,
+  limit: number = 5
+) {
+  const supabase = await createClient();
+
+  const now = new Date().toISOString();
+
+  // Get upcoming enrolled sessions with program and trainer info
+  const { data: enrollments, error } = await supabase
+    .from("session_enrollment")
+    .select(
+      `
+      id,
+      completed,
+      training_session!inner(
+        id,
+        session_datetime,
+        duration_minutes,
+        notes,
+        is_active,
+        trainer_id,
+        users!training_session_trainer_id_fkey(
+          first_name,
+          last_name
+        ),
+        training_program!inner(
+          id,
+          title
+        )
+      )
+    `
+    )
+    .eq("employee_id", userId)
+    .eq("completed", false)
+    .gte("training_session.session_datetime", now)
+    .eq("training_session.is_active", true)
+    .order("training_session(session_datetime)", { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(`Failed to get upcoming sessions: ${error.message}`);
+  }
+
+  // Transform to a cleaner format
+  return (enrollments ?? []).map((enrollment: any) => {
+    const session = enrollment.training_session;
+    const trainer = session.users;
+    const program = session.training_program;
+
+    return {
+      enrollmentId: enrollment.id,
+      sessionId: session.id,
+      sessionDatetime: session.session_datetime,
+      durationMinutes: session.duration_minutes,
+      notes: session.notes,
+      trainerName: trainer
+        ? `${trainer.first_name} ${trainer.last_name}`
+        : null,
+      programId: program.id,
+      programTitle: program.title,
+    };
+  });
+}

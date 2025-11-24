@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import DashboardStatsWidget from "../shared/DashboardStatsWidget";
 import ErrorDisplay from "../shared/ErrorDisplay";
+import UpcomingSessions from "../employee/UpcomingSessions";
 
 interface EmployeeDashboardData {
   totalEnrolled: number;
@@ -67,33 +68,34 @@ export default function EmployeeDashboard() {
   }
 
   return (
-    <div
-      className={`${loaded ? "loaded loading" : "loading"} grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6`}
-    >
-      <DashboardStatsWidget
-        title="Enrolled Sessions"
-        value={data.totalEnrolled}
-        description="Total sessions you're enrolled in"
-        variant="default"
-      />
-      <DashboardStatsWidget
-        title="Overdue Sessions"
-        value={data.overdue}
-        description="Sessions past due date"
-        variant="default"
-      />
-      <DashboardStatsWidget
-        title="Completed Sessions"
-        value={data.completed}
-        description="Sessions you've completed"
-        variant="default"
-      />
-      <DashboardStatsWidget
-        title="Available Sessions"
-        value={data.available}
-        description="Sessions available to enroll"
-        variant="default"
-      />
+    <div className={loaded ? "loaded loading" : "loading"}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <DashboardStatsWidget
+          title="Enrolled Sessions"
+          value={data.totalEnrolled}
+          description="Total sessions you're enrolled in"
+          variant="default"
+        />
+        <DashboardStatsWidget
+          title="Overdue Sessions"
+          value={data.overdue}
+          description="Sessions past due date"
+          variant="default"
+        />
+        <DashboardStatsWidget
+          title="Completed Sessions"
+          value={data.completed}
+          description="Sessions you've completed"
+          variant="default"
+        />
+        <DashboardStatsWidget
+          title="Available Sessions"
+          value={data.available}
+          description="Sessions available to enroll"
+          variant="default"
+        />
+      </div>
+      <UpcomingSessions />
     </div>
   );
 }
