@@ -108,3 +108,15 @@ export type ProgramDetail =
   | ManagerProgramDetail
   | TrainerProgramDetail
   | EmployeeProgramDetail;
+
+// Upcoming session for employee dashboard
+export interface UpcomingSession {
+  enrollmentId: string;
+  sessionId: string;
+  sessionDatetime: string;
+  durationMinutes: number;
+  notes: string | null;
+  trainerName: string | null;
+  programId: string;
+  programTitle: string;
+}

@@ -81,11 +81,26 @@
   --shadow-lg: 5px 5px 10px -1px rgb(33 34 48 / 0.16);
 }
 
-
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
   font-family: "Commissioner", Arial, Helvetica, sans-serif;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("/bg-image.svg");
+  background-repeat: repeat;
+  background-size: 1400px auto;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: -1;
 }
 
 /* Utility classes */
