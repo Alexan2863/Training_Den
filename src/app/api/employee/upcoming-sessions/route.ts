@@ -16,10 +16,14 @@ export async function GET() {
     // Get upcoming enrolled sessions for this employee
     const sessions = await getUpcomingEnrolledSessions(user.id);
 
-    return NextResponse.json({
-      success: true,
-      data: sessions,
-    });
+    return NextResponse.json(
+      { success: true, data: sessions },
+      {
+        headers: {
+          "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+        },
+      }
+    );
   } catch (error: unknown) {
     const errorMessage = getErrorMessage(error);
     console.error("Upcoming sessions fetch failed:", errorMessage);

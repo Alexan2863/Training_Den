@@ -16,10 +16,14 @@ export async function GET() {
     // Get employee dashboard statistics
     const stats = await getEmployeeDashboardStats(user.id);
 
-    return NextResponse.json({
-      success: true,
-      data: stats,
-    });
+    return NextResponse.json(
+      { success: true, data: stats },
+      {
+        headers: {
+          "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+        },
+      }
+    );
   } catch (error: unknown) {
     const errorMessage = getErrorMessage(error);
     console.error("Employee dashboard stats failed:", errorMessage);

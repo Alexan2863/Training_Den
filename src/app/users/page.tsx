@@ -11,8 +11,42 @@ import UserForm from "@/components/forms/UserForm";
 
 type NotificationType = "success" | "error" | null;
 
+function TableSkeleton({ isAdmin }: { isAdmin: boolean }) {
+  return (
+    <div className="animate-pulse">
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <div className="h-9 bg-gray-300 rounded w-48"></div>
+          <div className="h-10 bg-gray-300 rounded w-32"></div>
+        </div>
+      </div>
+      <div className="bg-white rounded-md shadow overflow-hidden">
+        <div className="bg-gray-300 h-12"></div>
+        <div className="divide-y divide-gray-200">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div key={i} className="px-6 py-4 flex items-center gap-4">
+              <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-40"></div>
+                <div className="h-3 bg-gray-200 rounded w-56"></div>
+              </div>
+              <div className="h-6 bg-gray-200 rounded w-20"></div>
+              {isAdmin && (
+                <div className="flex gap-3">
+                  <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                  <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<UserDisplay[]>([]);
+  const [users, setUsers] = useState<UserDisplay[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState<{
     type: NotificationType;
@@ -25,7 +59,6 @@ export default function AdminUsersPage() {
   const showNotification = useCallback(
     (type: NotificationType, message: string) => {
       setNotification({ type, message });
-      // Auto-hide after 5 seconds
       setTimeout(() => setNotification(null), 5000);
     },
     []
@@ -84,53 +117,6 @@ export default function AdminUsersPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="w-full h-full">
-        <main className="w-full h-full p-6 overflow-y-scroll">
-          <div className="animate-pulse">
-            {/* Header skeleton */}
-            <div className="mb-6">
-              <div className="flex justify-between items-center mb-4">
-                <div className="h-9 bg-gray-300 rounded w-48"></div>
-                <div className="h-10 bg-gray-300 rounded w-32"></div>
-              </div>
-            </div>
-
-            {/* Table skeleton */}
-            <div className="bg-white rounded-md shadow overflow-hidden">
-              {/* Table header */}
-              <div className="bg-gray-300 h-12"></div>
-              {/* Table rows */}
-              <div className="divide-y divide-gray-200">
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                  <div key={i} className="px-6 py-4 flex items-center gap-4">
-                    {/* Avatar circle */}
-                    <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-                    {/* Name and email */}
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-40"></div>
-                      <div className="h-3 bg-gray-200 rounded w-56"></div>
-                    </div>
-                    {/* Role badge */}
-                    <div className="h-6 bg-gray-200 rounded w-20"></div>
-                    {/* Action buttons */}
-                    {user?.role === "admin" && (
-                      <div className="flex gap-3">
-                        <div className="w-6 h-6 bg-gray-200 rounded"></div>
-                        <div className="w-6 h-6 bg-gray-200 rounded"></div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
   return (
     <div className="w-full h-full">
       <main className="w-full h-full p-6 overflow-y-scroll">
@@ -172,20 +158,40 @@ export default function AdminUsersPage() {
           </div>
         )}
 
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-3xl font-bold">All Users</h1>
-            {user?.role === "admin" && <UserForm onSuccess={fetchUsers} />}
+        <div className="crossfade-container">
+          {/* Skeleton */}
+          <div className={`crossfade-skeleton ${!loading ? "hidden" : ""}`}>
+            <TableSkeleton isAdmin={user?.role === "admin"} />
+          </div>
+
+          {/* Content */}
+          <div
+            className={`crossfade-content ${
+              !loading && users ? "visible" : ""
+            }`}
+          >
+            {users && (
+              <>
+                <div className="mb-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h1 className="text-3xl font-bold">All Users</h1>
+                    {user?.role === "admin" && (
+                      <UserForm onSuccess={fetchUsers} />
+                    )}
+                  </div>
+                </div>
+
+                <UserTable
+                  users={users}
+                  onView={handleView}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  isAdmin={user?.role === "admin"}
+                />
+              </>
+            )}
           </div>
         </div>
-
-        <UserTable
-          users={users}
-          onView={handleView}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          isAdmin={user?.role === "admin"}
-        />
 
         {/* Edit User Modal */}
         {editingUserId && (
