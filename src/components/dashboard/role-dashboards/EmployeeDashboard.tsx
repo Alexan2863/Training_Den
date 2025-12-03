@@ -36,13 +36,19 @@ export default function EmployeeDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchData(retryCount = 0) {
       try {
         // Fetch stats and sessions in parallel
         const [statsResponse, sessionsResponse] = await Promise.all([
           fetch("/api/employee/dashboard-stats"),
           fetch("/api/employee/upcoming-sessions"),
         ]);
+
+        // Retry on 401 - cookies may not be synced yet after refresh
+        if (statsResponse.status === 401 && retryCount < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          return fetchData(retryCount + 1);
+        }
 
         const [statsResult, sessionsResult] = await Promise.all([
           statsResponse.json(),

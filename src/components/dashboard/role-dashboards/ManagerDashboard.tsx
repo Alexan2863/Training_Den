@@ -4,10 +4,14 @@ import { useEffect, useState } from "react";
 import DashboardStatsWidget from "../shared/DashboardStatsWidget";
 import ErrorDisplay from "../shared/ErrorDisplay";
 import TrainingProgramsWidget from "@/components/training/TrainingProgramsWidget";
-import { getCurrentUser } from "@/lib/auth";
+import { AuthUser } from "@/lib/auth";
 
 interface ManagerDashboardData {
   activePrograms: number;
+}
+
+interface ManagerDashboardProps {
+  user: AuthUser;
 }
 
 function StatsSkeleton() {
@@ -21,7 +25,7 @@ function StatsSkeleton() {
   );
 }
 
-export default function ManagerDashboard() {
+export default function ManagerDashboard({ user }: ManagerDashboardProps) {
   const [data, setData] = useState<ManagerDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,12 +33,6 @@ export default function ManagerDashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
-        // Get current user to fetch their ID
-        const user = await getCurrentUser();
-        if (!user) {
-          throw new Error("User not authenticated");
-        }
-
         // Fetch program count with managerId parameter
         const programResponse = await fetch(
           `/api/stats/programs?managerId=${user.id}`
@@ -58,7 +56,7 @@ export default function ManagerDashboard() {
     }
 
     fetchData();
-  }, []);
+  }, [user.id]);
 
   if (error) {
     return <ErrorDisplay error={error} title="Failed to load dashboard" />;

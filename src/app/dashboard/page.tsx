@@ -43,9 +43,9 @@ export default function DashboardPage() {
       case "admin":
         return <AdminDashboard />;
       case "manager":
-        return <ManagerDashboard />;
+        return <ManagerDashboard user={user} />;
       case "trainer":
-        return <TrainerDashboard />;
+        return <TrainerDashboard user={user} />;
       case "employee":
         return <EmployeeDashboard />;
       default:

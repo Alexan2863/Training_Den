@@ -4,10 +4,14 @@ import { useEffect, useState } from "react";
 import DashboardStatsWidget from "../shared/DashboardStatsWidget";
 import ErrorDisplay from "../shared/ErrorDisplay";
 import TrainingProgramsWidget from "@/components/training/TrainingProgramsWidget";
-import { getCurrentUser } from "@/lib/auth";
+import { AuthUser } from "@/lib/auth";
 
 interface TrainerDashboardData {
   activeSessions: number;
+}
+
+interface TrainerDashboardProps {
+  user: AuthUser;
 }
 
 function StatsSkeleton() {
@@ -21,7 +25,7 @@ function StatsSkeleton() {
   );
 }
 
-export default function TrainerDashboard() {
+export default function TrainerDashboard({ user }: TrainerDashboardProps) {
   const [data, setData] = useState<TrainerDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,12 +33,6 @@ export default function TrainerDashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
-        // Get current user to fetch their ID
-        const user = await getCurrentUser();
-        if (!user) {
-          throw new Error("User not authenticated");
-        }
-
         // Fetch session count with trainerId parameter
         const response = await fetch(
           `/api/stats/sessions?trainerId=${user.id}`
@@ -56,7 +54,7 @@ export default function TrainerDashboard() {
     }
 
     fetchData();
-  }, []);
+  }, [user.id]);
 
   if (error) {
     return <ErrorDisplay error={error} title="Failed to load dashboard" />;

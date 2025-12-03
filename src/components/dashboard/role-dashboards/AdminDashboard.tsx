@@ -58,9 +58,16 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchData(retryCount = 0) {
       try {
         const response = await fetch("/api/admin/dashboard-stats");
+
+        // Retry on 401 - cookies may not be synced yet after refresh
+        if (response.status === 401 && retryCount < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          return fetchData(retryCount + 1);
+        }
+
         const result = await response.json();
 
         if (!result.success) {
