@@ -81,10 +81,19 @@ export async function signIn(email: string, password: string) {
 }
 
 // Sign out
-export async function signOut() {
-  const supabase = createClient();
-  const { error } = await supabase.auth.signOut();
-  return { error };
+export async function signOut(): Promise<{ success: boolean; error: Error | null }> {
+  try {
+    const supabase = createClient();
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      return { success: false, error };
+    }
+
+    return { success: true, error: null };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error : new Error("Sign out failed") };
+  }
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {

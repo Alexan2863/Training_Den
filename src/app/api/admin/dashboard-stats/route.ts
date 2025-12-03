@@ -15,30 +15,41 @@ export async function GET() {
   }
 
   try {
-    // Count users by role using shared service function
-    const adminsCount = await getUserCountByRole("admin");
-    const employeesCount = await getUserCountByRole("employee");
-    const managersCount = await getUserCountByRole("manager");
-    const trainersCount = await getUserCountByRole("trainer");
+    // Fetch all counts in parallel for better performance
+    const [
+      adminsCount,
+      employeesCount,
+      managersCount,
+      trainersCount,
+      activeSessionsCount,
+      activeProgramsCount,
+    ] = await Promise.all([
+      getUserCountByRole("admin"),
+      getUserCountByRole("employee"),
+      getUserCountByRole("manager"),
+      getUserCountByRole("trainer"),
+      getSessionCount(),
+      getProgramCount(),
+    ]);
 
-    // Count active sessions
-    const activeSessionsCount = await getSessionCount();
-
-    // Count active programs
-    const activeProgramsCount = await getProgramCount();
-
-    // Return all counts
-    return NextResponse.json({
-      success: true,
-      data: {
-        admins: adminsCount,
-        employees: employeesCount,
-        managers: managersCount,
-        trainers: trainersCount,
-        activeSessions: activeSessionsCount,
-        activePrograms: activeProgramsCount,
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          admins: adminsCount,
+          employees: employeesCount,
+          managers: managersCount,
+          trainers: trainersCount,
+          activeSessions: activeSessionsCount,
+          activePrograms: activeProgramsCount,
+        },
       },
-    });
+      {
+        headers: {
+          "Cache-Control": "private, max-age=60, stale-while-revalidate=120",
+        },
+      }
+    );
   } catch (error: unknown) {
     const errorMessage = getErrorMessage(error);
     console.error("Dashboard stats failed:", errorMessage);

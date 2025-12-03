@@ -23,6 +23,8 @@ export default function LoginPage() {
       setError(error.message);
       setIsLoading(false);
     } else if (user) {
+      // Refresh to sync server-side auth state, then navigate
+      router.refresh();
       router.push("/dashboard");
     } else {
       setError("Login failed: unexpected response");

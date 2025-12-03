@@ -41,6 +41,7 @@ interface ProfileIconProps {
 
 function ProfileIcon({ user, size = "md", className = "" }: ProfileIconProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -69,8 +70,23 @@ function ProfileIcon({ user, size = "md", className = "" }: ProfileIconProps) {
   }, [isDropdownOpen]);
 
   const handleSignOut = async () => {
-    await signOut();
-    router.push("/login");
+    if (isSigningOut) return;
+
+    setIsSigningOut(true);
+    const { success } = await signOut();
+
+    if (success) {
+      router.push("/login");
+    } else {
+      // Retry once on failure
+      const retryResult = await signOut();
+      if (retryResult.success) {
+        router.push("/login");
+      } else {
+        // Force redirect even if sign out failed - user wants to leave
+        router.push("/login");
+      }
+    }
   };
 
   return (
@@ -97,9 +113,10 @@ function ProfileIcon({ user, size = "md", className = "" }: ProfileIconProps) {
           )}
           <button
             onClick={handleSignOut}
-            className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:bg-muted rounded-b-md transition-colors cursor-pointer"
+            disabled={isSigningOut}
+            className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:bg-muted rounded-b-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Sign Out
+            {isSigningOut ? "Signing out..." : "Sign Out"}
           </button>
         </div>
       )}
