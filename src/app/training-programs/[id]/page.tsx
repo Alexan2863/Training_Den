@@ -117,7 +117,7 @@ export default function TrainingProgramDetailPage() {
   }
 
   return (
-    <div className="w-full h-full max-w-7xl p-6 overflow-y-scroll">
+    <div className="w-full h-full max-w-7xl px-4 py-4 sm:p-6 overflow-y-scroll">
       <div className="crossfade-container">
         {/* Skeleton */}
         <div className={`crossfade-skeleton ${!loading ? "hidden" : ""}`}>
@@ -130,7 +130,7 @@ export default function TrainingProgramDetailPage() {
             <>
               {/* Header */}
               <div className="mb-6">
-                <div className="flex justify-between items-start mb-4">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
                   <button
                     onClick={() => router.push("/training-programs")}
                     className="text-primary hover:text-primary-light cursor-pointer flex items-center gap-2"
@@ -140,16 +140,16 @@ export default function TrainingProgramDetailPage() {
                   {user?.role === "admin" && (
                     <button
                       onClick={() => setShowEditForm(true)}
-                      className="btn btn-primary"
+                      className="btn btn-primary w-full sm:w-auto"
                     >
                       Edit Program
                     </button>
                   )}
                 </div>
-                <h1 className="text-3xl font-bold mb-2">{program.title}</h1>
-                <div className="flex items-center gap-4 text-sm text-gray-600">
+                <h1 className="text-2xl sm:text-3xl font-bold mb-2">{program.title}</h1>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600">
                   <span>Manager: {program.managerName}</span>
-                  <span>•</span>
+                  <span className="hidden sm:inline">•</span>
                   <span>
                     Deadline:{" "}
                     {new Date(program.deadline).toLocaleDateString("en-US", {
@@ -158,7 +158,7 @@ export default function TrainingProgramDetailPage() {
                       day: "numeric",
                     })}
                   </span>
-                  <span>•</span>
+                  <span className="hidden sm:inline">•</span>
                   <span
                     className={`px-2 py-1 rounded text-xs font-medium ${
                       program.is_active
@@ -181,7 +181,7 @@ export default function TrainingProgramDetailPage() {
               {/* Sessions */}
               {"sessions" in program && program.sessions && (
                 <div className="mb-6">
-                  <h2 className="text-2xl font-bold mb-4">Sessions</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold mb-4">Sessions</h2>
                   <div className="space-y-4 stagger-fade-in">
                     {program.sessions.map((session, index) => (
                       <div
@@ -200,7 +200,7 @@ export default function TrainingProgramDetailPage() {
                             {session.is_active ? "Active" : "Inactive"}
                           </span>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
                           <div>
                             <span className="text-gray-600">Date & Time:</span>
                             <p className="font-medium">
@@ -243,14 +243,14 @@ export default function TrainingProgramDetailPage() {
               {/* Stats (role-specific) */}
               {"stats" in program && program.stats && (
                 <div className="mb-6">
-                  <h2 className="text-2xl font-bold mb-4">Statistics</h2>
-                  <div className="grid grid-cols-3 gap-4 stagger-fade-in">
+                  <h2 className="text-xl sm:text-2xl font-bold mb-4">Statistics</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 stagger-fade-in">
                     {Object.entries(program.stats).map(([key, value]) => (
                       <div key={key} className="bg-white border rounded-md p-4">
                         <p className="text-gray-600 text-sm capitalize">
                           {key.replace(/([A-Z])/g, " $1").trim()}
                         </p>
-                        <p className="text-2xl font-bold">{value}</p>
+                        <p className="text-xl sm:text-2xl font-bold">{value}</p>
                       </div>
                     ))}
                   </div>
@@ -272,8 +272,47 @@ export default function TrainingProgramDetailPage() {
                 "enrolledEmployees" in program &&
                 program.enrolledEmployees && (
                   <div className="mb-6">
-                    <h2 className="text-2xl font-bold mb-4">Enrolled Employees</h2>
-                    <div className="bg-white border rounded-md overflow-hidden">
+                    <h2 className="text-xl sm:text-2xl font-bold mb-4">Enrolled Employees</h2>
+                    {/* Mobile: Card layout */}
+                    <div className="block sm:hidden space-y-3">
+                      {program.enrolledEmployees.map((enrollment) => (
+                        <div
+                          key={enrollment.id}
+                          className="bg-white border rounded-md p-4"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <ProfileIcon
+                                user={{
+                                  id: enrollment.employee.id,
+                                  email: enrollment.employee.email,
+                                  first_name: enrollment.employee.first_name,
+                                  last_name: enrollment.employee.last_name,
+                                  role: "employee",
+                                }}
+                                size="md"
+                              />
+                              <span className="font-medium">{enrollment.employee.fullName}</span>
+                            </div>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium ${
+                                enrollment.completed
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-yellow-100 text-yellow-800"
+                              }`}
+                            >
+                              {enrollment.completed ? "Completed" : "Pending"}
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-600 space-y-1">
+                            <p>{enrollment.employee.email}</p>
+                            <p>Session {enrollment.session_id}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Desktop: Table layout */}
+                    <div className="hidden sm:block bg-white border rounded-md overflow-hidden">
                       <table className="w-full">
                         <thead className="bg-primary text-white border-b">
                           <tr>

@@ -185,7 +185,7 @@ export default function TrainerSessionManager({
 
   return (
     <div className="mb-6">
-      <h2 className="text-2xl font-bold mb-4">Your Sessions</h2>
+      <h2 className="text-xl sm:text-2xl font-bold mb-4">Your Sessions</h2>
 
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md" role="alert">
@@ -223,7 +223,7 @@ export default function TrainerSessionManager({
             >
               {/* Session Header */}
               <div
-                className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
+                className={`p-3 sm:p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
                   isExpanded ? "bg-gray-50" : ""
                 }`}
                 onClick={() => toggleSession(session.id)}
@@ -238,18 +238,18 @@ export default function TrainerSessionManager({
                   }
                 }}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="text-gray-600">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex items-start sm:items-center gap-3 flex-1">
+                    <div className="text-gray-600 mt-1 sm:mt-0">
                       {isExpanded ? (
                         <CaretDownIcon size={20} weight="bold" />
                       ) : (
                         <CaretRightIcon size={20} weight="bold" />
                       )}
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-lg">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-semibold text-base sm:text-lg">
                           {sessionDate.toLocaleDateString("en-US", {
                             month: "long",
                             day: "numeric",
@@ -284,7 +284,7 @@ export default function TrainerSessionManager({
                       }}
                       disabled={isUpdating}
                       aria-busy={isUpdating}
-                      className="btn btn-primary flex items-center gap-2"
+                      className="btn btn-primary flex items-center justify-center gap-2 w-full sm:w-auto text-sm"
                     >
                       {isUpdating ? (
                         <>
@@ -317,7 +317,7 @@ export default function TrainerSessionManager({
                         return (
                           <div
                             key={enrollment.id}
-                            className={`p-4 flex items-center justify-between ${
+                            className={`p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${
                               isCompleted ? "bg-green-50" : ""
                             }`}
                           >
@@ -326,29 +326,29 @@ export default function TrainerSessionManager({
                                 <CheckCircleIcon
                                   size={24}
                                   weight="fill"
-                                  className="text-green-600"
+                                  className="text-green-600 flex-shrink-0"
                                 />
                               ) : (
                                 <CircleIcon
                                   size={24}
                                   weight="regular"
-                                  className="text-gray-400"
+                                  className="text-gray-400 flex-shrink-0"
                                 />
                               )}
-                              <div>
-                                <p className="font-medium">
+                              <div className="min-w-0">
+                                <p className="font-medium truncate">
                                   {enrollment.employee.fullName}
                                 </p>
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-gray-600 truncate">
                                   {enrollment.employee.email}
                                 </p>
                               </div>
                             </div>
 
-                            <div>
+                            <div className="ml-9 sm:ml-0">
                               {isCompleted ? (
-                                <div className="text-right">
-                                  <span className="inline-flex items-center gap-1 px-3 py-3 rounded-lg bg-green-200 text-green-800 text-md font-medium btn">
+                                <div className="text-left sm:text-right">
+                                  <span className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-green-200 text-green-800 text-sm font-medium">
                                     <CheckCircleIcon size={16} weight="fill" />
                                     Completed
                                   </span>
@@ -367,7 +367,7 @@ export default function TrainerSessionManager({
                                   }
                                   disabled={isUpdatingThis}
                                   aria-busy={isUpdatingThis}
-                                  className="btn btn-secondary flex items-center gap-2"
+                                  className="btn btn-secondary flex items-center gap-2 text-sm w-full sm:w-auto justify-center"
                                 >
                                   {isUpdatingThis ? (
                                     <>

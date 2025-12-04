@@ -26,10 +26,10 @@ export default function TrainingCard({ program, onView }: TrainingCardProps) {
       </div>
       <div>
         <div className="flex items-center">
-          <p className="font-bold p-4 pb-2 text-lg">{program.title}</p>
+          <p className="font-bold p-4 pb-2 text-md">{program.title}</p>
 
           <div className="flex ml-auto pr-5">
-            <p className="text-xl pr-1">{program.enrollmentCount}</p>
+            <p className="text-lg pr-1">{program.enrollmentCount}</p>
             <StudentIcon weight="fill" size={32} />
           </div>
         </div>

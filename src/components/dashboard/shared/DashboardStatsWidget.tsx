@@ -32,20 +32,20 @@ export default function DashboardStatsWidget({
   };
 
   return (
-    <div className={`${variantClasses[variant]} rounded-lg p-6 shadow-lg`}>
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className={`text-3xl font-bold mt-2 ${valueClasses[variant]}`}>
+    <div className={`${variantClasses[variant]} rounded-lg p-4 sm:p-6 shadow-lg`}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <p className={`text-2xl sm:text-3xl font-bold mt-1 sm:mt-2 ${valueClasses[variant]}`}>
             {value}
           </p>
-          <p className="text-sm font-medium text-foreground pt-1">{title}</p>
+          <p className="text-xs sm:text-sm font-medium text-foreground pt-1 truncate">{title}</p>
           {description && (
-            <p className="text-sm text-gray-500 mt-1">{description}</p>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1 line-clamp-2">{description}</p>
           )}
         </div>
         {icon && (
           <div
-            className={`flex items-center justify-center ${valueClasses[variant]}`}
+            className={`flex items-center justify-center flex-shrink-0 ${valueClasses[variant]}`}
           >
             {icon}
           </div>

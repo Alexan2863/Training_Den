@@ -175,7 +175,7 @@ export default function EmployeeSessionEnrollment({
 
   return (
     <div className="mb-6">
-      <h2 className="text-2xl font-bold mb-4">Session Enrollments</h2>
+      <h2 className="text-xl sm:text-2xl font-bold mb-4">Session Enrollments</h2>
 
       {error && (
         <div
@@ -204,15 +204,15 @@ export default function EmployeeSessionEnrollment({
           return (
             <div
               key={session.id}
-              className={`border rounded-md p-4 ${
+              className={`border rounded-md p-3 sm:p-4 ${
                 isPast && !isCompleted
                   ? "bg-orange-50 border-secondary-light"
                   : "bg-white border-gray-200"
               }`}
             >
-              <div className="flex items-start gap-4">
+              <div className="flex items-start gap-3 sm:gap-4">
                 {/* Checkbox/Toggle */}
-                <div className="pt-1">
+                <div className="pt-0.5 sm:pt-1 flex-shrink-0">
                   {isUpdating ? (
                     <SpinnerGapIcon
                       size={24}
@@ -259,10 +259,10 @@ export default function EmployeeSessionEnrollment({
                 </div>
 
                 {/* Session Details */}
-                <div className="flex-1">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold text-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-base sm:text-lg">
                         {sessionDate.toLocaleDateString("en-US", {
                           month: "long",
                           day: "numeric",
@@ -274,11 +274,11 @@ export default function EmployeeSessionEnrollment({
                           minute: "2-digit",
                         })}
                       </h3>
-                      <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-sm text-gray-600">
                         <span>
                           Trainer: {session.trainerName || "Not assigned"}
                         </span>
-                        <span>•</span>
+                        <span className="hidden sm:inline">•</span>
                         <span>{session.duration_minutes} minutes</span>
                       </div>
                       {session.notes && (
@@ -289,11 +289,11 @@ export default function EmployeeSessionEnrollment({
                     </div>
 
                     {/* Status Badge */}
-                    <div>
+                    <div className="flex-shrink-0">
                       {isEnrolled && (
                         <div>
                           {isCompleted ? (
-                            <div className="text-right">
+                            <div className="text-left sm:text-right">
                               <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-lg">
                                 <CheckCircleIcon size={16} weight="fill" />
                                 Completed

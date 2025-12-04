@@ -273,7 +273,7 @@ body::before {
   background: var(--fuchsia-50, #fdf4ff);
   box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.16);
   color: var(--fuchsia-800, #86198f);
-  font-size: 16px;
+  font-size: 14px;
 }
 
 /* Users table */

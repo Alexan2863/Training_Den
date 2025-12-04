@@ -248,7 +248,7 @@ export default function ManagerEmployeeAssignment({
 
   return (
     <div className="mb-6">
-      <h2 className="text-2xl font-bold mb-4">Employee Assignments</h2>
+      <h2 className="text-xl sm:text-2xl font-bold mb-4">Employee Assignments</h2>
 
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md" role="alert">
@@ -266,7 +266,7 @@ export default function ManagerEmployeeAssignment({
         {/* Assigned Employees Section */}
         <div className="border border-gray-200 rounded-md overflow-hidden bg-white">
           <div
-            className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
+            className={`p-3 sm:p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
               isAssignedExpanded ? "bg-gray-50" : ""
             }`}
             onClick={() => toggleSection("assigned")}
@@ -281,9 +281,9 @@ export default function ManagerEmployeeAssignment({
               }
             }}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 flex-1">
-                <div className="text-gray-600">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-start sm:items-center gap-3 flex-1">
+                <div className="text-gray-600 mt-1 sm:mt-0">
                   {isAssignedExpanded ? (
                     <CaretDownIcon size={20} weight="bold" />
                   ) : (
@@ -291,7 +291,7 @@ export default function ManagerEmployeeAssignment({
                   )}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">
+                  <h3 className="font-semibold text-base sm:text-lg">
                     Assigned Employees ({assignedCount})
                   </h3>
                   <p className="text-sm text-gray-600">
@@ -308,7 +308,7 @@ export default function ManagerEmployeeAssignment({
                   }}
                   disabled={bulkOperating}
                   aria-busy={bulkOperating}
-                  className="btn btn-secondary flex items-center gap-2"
+                  className="btn btn-secondary flex items-center justify-center gap-2 w-full sm:w-auto text-sm"
                 >
                   {bulkOperating ? (
                     <>
@@ -342,20 +342,20 @@ export default function ManagerEmployeeAssignment({
                     return (
                       <div
                         key={assignment.id}
-                        className="p-4 flex items-center justify-between"
+                        className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                             <span className="text-blue-700 font-semibold text-sm">
                               {assignment.employee.first_name[0]}
                               {assignment.employee.last_name[0]}
                             </span>
                           </div>
-                          <div>
-                            <p className="font-medium">
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">
                               {assignment.employee.fullName}
                             </p>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-gray-600 truncate">
                               {assignment.employee.email}
                             </p>
                           </div>
@@ -370,7 +370,7 @@ export default function ManagerEmployeeAssignment({
                           }
                           disabled={isUpdating}
                           aria-busy={isUpdating}
-                          className="btn btn-secondary flex items-center gap-2"
+                          className="btn btn-secondary flex items-center justify-center gap-2 w-full sm:w-auto text-sm"
                         >
                           {isUpdating ? (
                             <>
@@ -399,7 +399,7 @@ export default function ManagerEmployeeAssignment({
         {/* Available Employees Section */}
         <div className="border border-gray-200 rounded-md overflow-hidden bg-white">
           <div
-            className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
+            className={`p-3 sm:p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
               isAvailableExpanded ? "bg-gray-50" : ""
             }`}
             onClick={() => toggleSection("available")}
@@ -414,9 +414,9 @@ export default function ManagerEmployeeAssignment({
               }
             }}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 flex-1">
-                <div className="text-gray-600">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-start sm:items-center gap-3 flex-1">
+                <div className="text-gray-600 mt-1 sm:mt-0">
                   {isAvailableExpanded ? (
                     <CaretDownIcon size={20} weight="bold" />
                   ) : (
@@ -424,7 +424,7 @@ export default function ManagerEmployeeAssignment({
                   )}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">
+                  <h3 className="font-semibold text-base sm:text-lg">
                     Available Employees ({availableCount})
                   </h3>
                   <p className="text-sm text-gray-600">
@@ -441,7 +441,7 @@ export default function ManagerEmployeeAssignment({
                   }}
                   disabled={bulkOperating}
                   aria-busy={bulkOperating}
-                  className="btn btn-primary flex items-center gap-2"
+                  className="btn btn-primary flex items-center justify-center gap-2 w-full sm:w-auto text-sm"
                 >
                   {bulkOperating ? (
                     <>
@@ -473,18 +473,18 @@ export default function ManagerEmployeeAssignment({
                     return (
                       <div
                         key={employee.id}
-                        className="p-4 flex items-center justify-between"
+                        className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
                             <span className="text-gray-700 font-semibold text-sm">
                               {employee.first_name[0]}
                               {employee.last_name[0]}
                             </span>
                           </div>
-                          <div>
-                            <p className="font-medium">{employee.fullName}</p>
-                            <p className="text-sm text-gray-600">
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{employee.fullName}</p>
+                            <p className="text-sm text-gray-600 truncate">
                               {employee.email}
                             </p>
                           </div>
@@ -494,7 +494,7 @@ export default function ManagerEmployeeAssignment({
                           onClick={() => assignEmployee(employee.id)}
                           disabled={isUpdating}
                           aria-busy={isUpdating}
-                          className="btn btn-primary flex items-center gap-2"
+                          className="btn btn-primary flex items-center justify-center gap-2 w-full sm:w-auto text-sm"
                         >
                           {isUpdating ? (
                             <>
