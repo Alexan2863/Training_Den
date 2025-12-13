@@ -58,7 +58,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="w-full h-full max-w-7xl">
+    <div className="w-full h-full max-w-7xl overflow-y-scroll scrollbar-hidden">
       <main className="w-full h-full p-6">
         <div className={`loading ${loaded ? "loaded" : ""} space-y-8`}>
           <div>

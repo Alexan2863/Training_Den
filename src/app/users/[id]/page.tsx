@@ -125,7 +125,7 @@ export default function UserDetailPage() {
   const fullName = user ? `${user.first_name} ${user.last_name}` : "";
 
   return (
-    <div className="w-full h-full max-w-7xl p-6 overflow-y-scroll">
+    <div className="w-full h-full max-w-7xl p-6 overflow-y-scroll scrollbar-hidden">
       <div className="crossfade-container">
         {/* Skeleton */}
         <div className={`crossfade-skeleton ${!loading ? "hidden" : ""}`}>

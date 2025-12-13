@@ -296,7 +296,7 @@ export default function TrainingProgramForm({
           open ? "flex" : "hidden"
         } fixed inset-0 z-50 justify-center items-center p-4`}
       >
-        <div className="bg-white border-2 border-ring rounded-xl w-full max-w-lg shadow-xl relative max-h-[90vh] flex flex-col">
+        <div className="bg-white border-2 border-ring rounded-xl w-full max-w-2xl shadow-xl relative max-h-[90vh] flex flex-col">
           {/* Fixed Header with Close Button */}
           <div className="flex-shrink-0 flex justify-end p-4 border-b border-gray-200">
             <button
@@ -321,7 +321,7 @@ export default function TrainingProgramForm({
             onSubmit={handleSubmit}
             className="flex flex-col flex-1 overflow-hidden"
           >
-            <div className="overflow-y-auto px-6 pt-6 pb-6 flex-1">
+            <div className="overflow-y-auto scrollbar-hidden px-6 pt-6 pb-6 flex-1">
               <h2 className="text-3xl font-semibold mb-6">
                 {isEditMode ? "Edit Training Program" : "Create Training"}
               </h2>

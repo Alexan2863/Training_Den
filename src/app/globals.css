@@ -299,3 +299,13 @@ h5,
 h6 {
   font-weight: 600;
 }
+
+/* Hide scrollbar utility */
+.scrollbar-hidden {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

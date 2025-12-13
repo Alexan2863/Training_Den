@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { UserRole, UserFormData } from "@/lib/types/users";
 import { CaretDownIcon, XIcon } from "@phosphor-icons/react";
 
@@ -21,7 +22,13 @@ interface UserFormProps {
 
 export default function UserForm({ onSuccess, onCancel, userId, initialOpen = false }: UserFormProps) {
   const [open, setOpen] = useState(initialOpen);
+  const [mounted, setMounted] = useState(false);
   const isEditMode = !!userId;
+
+  // Track mount state for portal (document.body not available during SSR)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -170,30 +177,20 @@ export default function UserForm({ onSuccess, onCancel, userId, initialOpen = fa
     }
   };
 
-  return (
+  const modalContent = (
     <>
-      {/* Button to open modal - only show in create mode */}
-      {!isEditMode && (
-        <button
-          className="px-4 py-2 btn-primary text-white rounded-md"
-          onClick={() => setOpen(true)}
-        >
-          Add User
-        </button>
-      )}
-
-      {/* Overlay */}
+      {/* Backdrop */}
       {open && (
         <div className="fixed inset-0 bg-black/40 z-40" onClick={handleClose} />
       )}
 
       {/* Modal */}
       <div
-        className={`fixed inset-0 z-50 flex justify-center items-center p-4 ${
-          open ? "" : "hidden"
-        }`}
+        className={`${
+          open ? "flex" : "hidden"
+        } fixed inset-0 z-50 justify-center items-center p-4`}
       >
-        <div className="bg-white border-2 border-ring rounded-2xl w-full max-w-lg shadow-xl relative max-h-[90vh] flex flex-col">
+        <div className="bg-white border-2 border-ring rounded-xl w-full max-w-2xl shadow-xl relative max-h-[90vh] flex flex-col">
           {/* Fixed Header with Close Button */}
           <div className="flex-shrink-0 flex justify-end p-4 border-b border-gray-200">
             <button
@@ -216,7 +213,7 @@ export default function UserForm({ onSuccess, onCancel, userId, initialOpen = fa
           {/* Form */}
           <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
             {/* Scrollable content */}
-            <div className="overflow-y-auto px-8 pt-6 pb-6 flex-1">
+            <div className="overflow-y-auto scrollbar-hidden px-8 pt-6 pb-6 flex-1">
               {/* Avatar with role colors */}
               <div className="w-full flex justify-center mb-6">
                 <div
@@ -358,7 +355,7 @@ export default function UserForm({ onSuccess, onCancel, userId, initialOpen = fa
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end gap-3 px-8 py-4 bg-gray-50 rounded-b-2xl">
+            <div className="flex justify-end gap-3 px-6 py-4 bg-gray-50 rounded-b-xl">
               <button
                 type="button"
                 onClick={handleClose}
@@ -378,6 +375,23 @@ export default function UserForm({ onSuccess, onCancel, userId, initialOpen = fa
           </form>
         </div>
       </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* Button to open modal - only show in create mode */}
+      {!isEditMode && (
+        <button
+          onClick={() => setOpen(true)}
+          className="px-4 py-2 btn-primary text-white rounded-md"
+        >
+          Add User
+        </button>
+      )}
+
+      {/* Render modal in portal to escape parent stacking context */}
+      {mounted && createPortal(modalContent, document.body)}
     </>
   );
 }

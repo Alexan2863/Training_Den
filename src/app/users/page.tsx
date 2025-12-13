@@ -119,7 +119,7 @@ export default function AdminUsersPage() {
 
   return (
     <div className="w-full h-full">
-      <main className="w-full h-full p-6 overflow-y-scroll">
+      <main className="w-full h-full p-6 overflow-y-scroll scrollbar-hidden">
         {/* Notification Banner */}
         {notification && (
           <div

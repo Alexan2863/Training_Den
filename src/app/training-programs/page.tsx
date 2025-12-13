@@ -14,7 +14,7 @@ export default function TrainingPrograms() {
   };
 
   return (
-    <div className="p-4 w-full h-full max-w-7xl">
+    <div className="p-4 w-full h-full max-w-7xl scrollbar-hidden">
       {user?.role === "admin" && (
         <div className="flex items-center justify-center p-4">
           <TrainingProgramForm onSuccess={handleProgramCreated} />

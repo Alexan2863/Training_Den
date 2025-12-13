@@ -20,7 +20,7 @@ export default function EditTrainingProgramPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 overflow-y-scroll flex justify-center">
+    <div className="w-full h-full p-6 overflow-y-scroll flex justify-center scrollbar-hidden">
       <TrainingProgramForm
         programId={programId}
         initialOpen={true}

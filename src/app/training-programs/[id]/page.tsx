@@ -117,7 +117,7 @@ export default function TrainingProgramDetailPage() {
   }
 
   return (
-    <div className="w-full h-full max-w-7xl px-4 py-4 sm:p-6 overflow-y-scroll">
+    <div className="w-full h-full max-w-7xl px-4 py-4 sm:p-6 overflow-y-scroll scrollbar-hidden">
       <div className="crossfade-container">
         {/* Skeleton */}
         <div className={`crossfade-skeleton ${!loading ? "hidden" : ""}`}>
